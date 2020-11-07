@@ -50,7 +50,7 @@ Sidebar {.sidebar data-width=180}
 
 # Geral {.hidden}
 
-Row {data-height=10}
+Row {data-height=110}
 -------------------------------------
 
 <!-- Caixas -->
