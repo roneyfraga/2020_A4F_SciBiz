@@ -1,0 +1,349 @@
+
+---
+title: "Shelf Life"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    orientation: rows
+    navbar:
+      - { title: "<b>Research</b>", href: "http://roneyfraga.com/dash/2020_A4F", align: right }
+      - { title: "People", href: "http://roneyfraga.com/dash/2020_A4F/#pessoas", align: right }
+      - { title: "Patent", href: "http://roneyfraga.com/dash/2020_A4F/#pessoas", align: right }
+      - { title: "About", href: "http://roneyfraga.com/", align: right }
+    social: [ "menu" ]
+    source_code: "embed"
+    theme: bootstrap #yeti #lumen
+    logo: logo.png
+---
+
+```{r setup, include=FALSE}
+options(scipen=999)
+library(rmarkdown)
+library(flexdashboard)
+library(pipeR)
+library(tidyverse)
+library(rio)
+library(ggraph)
+library(tidygraph)
+library(DT)
+library(plotly)
+library(visNetwork)
+library(igraph)
+library(ggthemes)
+```
+
+Sidebar {.sidebar data-width=180}
+=====================================
+
+[Geral](#geral)
+
+[Tema ABC](#grupo-g01)
+
+[Tópico WE](#grupo-g02)
+
+[Tópico AV](#grupo-g03)
+
+[Micro alguma coisa](#grupo-g04)
+
+[Conclusões](#conclusoes)
+
+
+# Geral {.hidden}
+
+Row {data-height=10}
+-------------------------------------
+
+<!-- Caixas -->
+
+###
+
+```{r}
+valueBox('52,000,000', caption = "Scopus Total Registers", icon="fa-copy")
+```
+
+###
+
+```{r}
+valueBox('4.13%', caption = "Scopus Growth Rate", icon="fa-arrow-up")
+```
+
+### 
+
+```{r}
+valueBox('17 Years', caption = "Scopus Doubling Time", icon="fa-clock")
+```
+
+###
+
+```{r}
+valueBox('13,516', caption = "Shelf Life Total Registers", icon="fa-copy")
+```
+
+### 
+
+
+```{r}
+valueBox('12.9%', caption = "Shelf Life Growth Rate", icon="fa-arrow-up")
+```
+
+### 
+
+```{r}
+valueBox('5.6 Years', caption = "Shelf Life Doubling Time", icon="fa-clock")
+```
+
+Row {data-height=600}
+-------------------------------------
+
+### Shelf Life Growth
+
+```{r}
+# graphics
+import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/shelf_life_growth.txt') %>>% 
+    as_tibble %>>% 
+    rename(PY = V1, publications = V2 ) %>>% 
+    dplyr::filter(PY %in% c(1980:2019)) %>>% 
+    dplyr::arrange(PY) %>>% 
+    dplyr::mutate(trend=1:n()) %>>% 
+    (. -> d)
+
+d$lnp <- log(d$publications)
+
+# ajustar parametros via mqo 
+m1 <- lm(lnp ~ trend, data=d)
+
+# summary(m1)
+
+beta0 <- m1$coefficients[[1]]
+beta1 <- m1$coefficients[[2]]
+
+# modelo não linear
+# 1980 é o primeiro ano da série
+m2 <- nls(publications ~ b0*exp(b1*(PY-1980)), start = list(b0=beta0, b1=beta1), data=d)
+
+# publications estimado
+d$predicted <- 12.159638*exp(0.121922*(d$PY-1980))
+
+# d %>>% print(n=Inf)
+
+# graph
+g_shelf <- ggplot(d, aes(x = PY, y = publications)) +
+    geom_point() +
+    geom_line(aes(y = predicted), colour='red') +
+    scale_y_continuous(limits=c(0, 1500), breaks = seq(0, 1500, by=100 )) +
+    scale_x_continuous(limits=c(min(d[,'PY']), (max(d[,'PY']))), breaks = seq(min(d[,'PY']), (max(d[,'PY']))+1,by=2)) +
+    xlab("Years") + 
+    ylab("Publications") +
+    theme(
+          axis.text.x=element_text(angle=90, vjust=0.4,hjust=1, size=12),
+          axis.text.y=element_text(angle=0, vjust=0.4,hjust=1, size=12),
+          panel.grid.major.x=element_blank()
+          ) +
+    theme_bw()
+
+ggplotly(g_shelf)
+```
+
+### Shelf Life Segmented Growth
+
+<!-- Talvez fazer esse gráfico no ggplot2  -->
+
+```{r, out.width='75%'}
+knitr::include_graphics('segmented_regression.png')
+```
+
+
+Row 
+-------------------------------------
+
+<!-- melhorar essa rede, no layout e adicionando um seletor de grupos  -->
+
+```{r}
+netcoup <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup.rds') 
+hubs <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup_hubs.rds') 
+
+hubs %>>% 
+    select(SR,Ki) %>>% 
+    (. -> hubs2)
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    left_join(hubs2) %>>% 
+    (. -> netcoup)
+
+netcoup %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    group_by(grupo) %>>% 
+    slice_max(TC, prop=.05) %>>% 
+    (. -> topn)
+
+netcoup %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    dplyr::filter(name %in% topn$name) %>>% 
+    (. -> netcoup2)
+
+tibble(id=1:length(V(netcoup2)),
+       label=NA,
+       group=V(netcoup2)$grupo,
+       size=ifelse(V(netcoup2)$Ki==0,0.01,V(netcoup2)$Ki/30)
+       ) %>>% 
+(. -> nodes)
+
+tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
+       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to),
+       value=0.01,
+       label=NA
+       ) %>>% 
+(. -> edges)
+
+visNetwork(nodes, edges, height = "650px", width = "650px") %>%
+    visIgraphLayout() %>>%
+    visNodes(size = 2)  
+```
+
+### Crescimento dos Grupos
+    
+```{r}
+
+netcoup <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup.rds')
+a <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup_grupos.rds')
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    group_by(PY,grupo) %>>% 
+    tally(sort=TRUE) %>>% 
+    arrange(grupo,desc(PY)) %>>% 
+    ungroup %>>% 
+    dplyr::filter(PY %in% c(2000:2019)) %>>% 
+    dplyr::mutate(Group=grupo) %>>% 
+    (. -> grupoAno)
+
+ggplot(
+       data=grupoAno, 
+       aes(x=PY, y=n, group=Group, color=Group)) +
+    geom_line() +
+    theme(plot.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position='right' ) +
+    geom_point(aes(shape=Group)) +
+    labs(y='Publications', x='Years') +
+    guides(fill=guide_legend(title="Group")) +
+    theme_linedraw() +
+    theme(axis.text.x=element_text(angle=90, vjust=0.4,hjust=1),panel.grid.major.x=element_blank()) +
+    scale_y_continuous(limits=c(0,max(grupoAno[,'n'])), breaks = seq(0, max(grupoAno[,'n']), by=50)) +
+    scale_x_continuous(limits=c(min(grupoAno[,'PY']), max(grupoAno[,'PY'])), breaks = seq(min(grupoAno[,'PY']), max(grupoAno[,'PY']), by=1)) 
+
+```
+
+
+Row
+-------------------------------------
+
+### Groups Table
+    
+```{r}
+
+grupos <- sort(unique(grupoAno$Group))
+
+# grupos <- grupos[1:3]
+
+res <- vector('double', length(grupos))
+
+for(i in seq_along(grupos)){ 
+
+    grupoAno %>>% 
+        dplyr::select(PY,n,Group) %>>% 
+        dplyr::rename(publications = n) %>>% 
+        dplyr::filter(PY >= 2000) %>>% 
+        dplyr::arrange(PY) %>>%  
+        dplyr::filter(Group==grupos[[i]]) %>>%
+        dplyr::mutate(trend=1:n()) %>>%
+        dplyr::mutate(lnp=log(publications)) %>>%
+        (. -> d) 
+
+    # ajustar parametros via mqo 
+    m1 <- lm(lnp ~ trend, data=d)
+    beta0 <- m1$coefficients[[1]]
+    beta1 <- m1$coefficients[[2]]
+    
+    # modelo não linear
+    m2 <- nls(publications ~ b0*exp(b1*(PY-2010)), start = list(b0=beta0, b1=beta1), data=d)
+    res[[i]] <- coef(m2)[2]
+
+}
+
+# print(xtable(grupoAnoCrescimento, type = "latex"))
+
+data.frame(Groups=grupos,Coef=res) %>>% 
+    as_tibble %>>% 
+    mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
+    dplyr::select(-Coef) %>>% 
+    left_join(import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
+    dplyr::arrange(Groups) %>>% 
+    (. -> grupoAnoCrescimento) %>>%     
+    dplyr::rename(AverageAge = PY.m) %>>% 
+    dplyr::rename(TotalPapers = qtde.papers) %>>% 
+    mutate(AverageAge = round(AverageAge,1)) %>>% 
+    left_join(import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
+    mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
+    relocate(Description, .after=Groups) %>>% 
+    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  %>>% 
+    formatRound('GrowthRateYear',1)
+```
+
+
+# Grupo g01 {.hidden}
+
+Algum texto sobre g01
+
+```{r}
+datatable(head(iris), class = 'cell-border stripe')
+```
+
+# Grupo g02 {.hidden}
+
+Algum texto sobre g02
+
+```{r}
+datatable(head(iris), class = 'cell-border stripe')
+```
+
+# Grupo g03 {.hidden}
+
+Algum texto referente a g03
+
+```{r}
+plot(1:19)
+```
+
+# Grupo g04 {.hidden}
+
+###
+
+```{r}
+valueBox(247, caption = "Connections", icon="fa-random")
+```
+
+###
+
+```{r}
+valueBox(42, icon = "fa-pencil", href="#details")
+```
+
+# Conclusoes  {.hidden}
+
+Escrever algum texto para finalizar a análise.
+
+
+# Pessoas  {.hidden}
+
+Em construção. 
+
+# Patentes  {.hidden}
+
+Em construção.
+
