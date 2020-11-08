@@ -30,6 +30,7 @@ library(plotly)
 library(visNetwork)
 library(igraph)
 library(ggthemes)
+library(highcharter)
 ```
 
 Sidebar {.sidebar data-width=180}
@@ -99,7 +100,7 @@ Row {data-height=600}
 
 ```{r}
 # graphics
-import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/shelf_life_growth.txt') %>>% 
+import('shelf_life_growth.txt') %>>% 
     as_tibble %>>% 
     rename(PY = V1, publications = V2 ) %>>% 
     dplyr::filter(PY %in% c(1980:2019)) %>>% 
@@ -126,22 +127,8 @@ d$predicted <- 12.159638*exp(0.121922*(d$PY-1980))
 
 # d %>>% print(n=Inf)
 
-# graph
-g_shelf <- ggplot(d, aes(x = PY, y = publications)) +
-    geom_point() +
-    geom_line(aes(y = predicted), colour='red') +
-    scale_y_continuous(limits=c(0, 1500), breaks = seq(0, 1500, by=100 )) +
-    scale_x_continuous(limits=c(min(d[,'PY']), (max(d[,'PY']))), breaks = seq(min(d[,'PY']), (max(d[,'PY']))+1,by=2)) +
-    xlab("Years") + 
-    ylab("Publications") +
-    theme(
-          axis.text.x=element_text(angle=90, vjust=0.4,hjust=1, size=12),
-          axis.text.y=element_text(angle=0, vjust=0.4,hjust=1, size=12),
-          panel.grid.major.x=element_blank()
-          ) +
-    theme_bw()
-
-ggplotly(g_shelf)
+hchart(d, "column", hcaes(x = PY, y = publications), name = "Publications", showInLegend = TRUE) %>>%
+  hc_add_series(d, "line", hcaes(x = PY, y = predicted), name = "Regression", showInLegend = TRUE)
 ```
 
 ### Shelf Life Segmented Growth
@@ -159,8 +146,8 @@ Row
 <!-- melhorar essa rede, no layout e adicionando um seletor de grupos  -->
 
 ```{r}
-netcoup <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup.rds') 
-hubs <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup_hubs.rds') 
+netcoup <- import('netcoup.rds') 
+hubs <- import('netcoup_hubs.rds') 
 
 hubs %>>% 
     select(SR,Ki) %>>% 
@@ -209,8 +196,8 @@ visNetwork(nodes, edges, height = "650px", width = "650px") %>%
     
 ```{r}
 
-netcoup <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup.rds')
-a <- import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup_grupos.rds')
+netcoup <- import('netcoup.rds')
+a <- import('netcoup_grupos.rds')
 
 netcoup %>>% 
     activate(nodes) %>>% 
@@ -222,21 +209,10 @@ netcoup %>>%
     ungroup %>>% 
     dplyr::filter(PY %in% c(2000:2019)) %>>% 
     dplyr::mutate(Group=grupo) %>>% 
+    rename( Publications = n, Year = PY ) %>>% 
     (. -> grupoAno)
 
-ggplot(
-       data=grupoAno, 
-       aes(x=PY, y=n, group=Group, color=Group)) +
-    geom_line() +
-    theme(plot.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position='right' ) +
-    geom_point(aes(shape=Group)) +
-    labs(y='Publications', x='Years') +
-    guides(fill=guide_legend(title="Group")) +
-    theme_linedraw() +
-    theme(axis.text.x=element_text(angle=90, vjust=0.4,hjust=1),panel.grid.major.x=element_blank()) +
-    scale_y_continuous(limits=c(0,max(grupoAno[,'n'])), breaks = seq(0, max(grupoAno[,'n']), by=50)) +
-    scale_x_continuous(limits=c(min(grupoAno[,'PY']), max(grupoAno[,'PY'])), breaks = seq(min(grupoAno[,'PY']), max(grupoAno[,'PY']), by=1)) 
-
+hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group))
 ```
 
 
@@ -246,6 +222,22 @@ Row
 ### Groups Table
     
 ```{r}
+
+netcoup <- import('netcoup.rds')
+a <- import('netcoup_grupos.rds')
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    group_by(PY,grupo) %>>% 
+    tally(sort=TRUE) %>>% 
+    arrange(grupo,desc(PY)) %>>% 
+    ungroup %>>% 
+    dplyr::filter(PY %in% c(2000:2019)) %>>% 
+    dplyr::mutate(Group=grupo) %>>% 
+    mutate( Publications = n, Year = PY ) %>>% 
+    (. -> grupoAno)
 
 grupos <- sort(unique(grupoAno$Group))
 
@@ -282,13 +274,13 @@ data.frame(Groups=grupos,Coef=res) %>>%
     as_tibble %>>% 
     mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
     dplyr::select(-Coef) %>>% 
-    left_join(import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
+    left_join(import('netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
     dplyr::arrange(Groups) %>>% 
     (. -> grupoAnoCrescimento) %>>%     
     dplyr::rename(AverageAge = PY.m) %>>% 
     dplyr::rename(TotalPapers = qtde.papers) %>>% 
     mutate(AverageAge = round(AverageAge,1)) %>>% 
-    left_join(import('~/OneDrive/Rworkspace/2020 A4F Shelf Live/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
+    left_join(import('ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
     mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
     relocate(Description, .after=Groups) %>>% 
     datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  %>>% 
