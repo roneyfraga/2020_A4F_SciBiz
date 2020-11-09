@@ -8,6 +8,7 @@
 - visNetwork
     - include group selector
     - improve layout
+    - gif with ggraph?
 or
 - higcharter + igraph
     - include colors by group

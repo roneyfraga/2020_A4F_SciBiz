@@ -1,5 +1,5 @@
 ---
-title: "Shelf Life"
+title: "A4F - Shelf Life"
 output: 
   flexdashboard::flex_dashboard:
     navbar:
@@ -10,7 +10,7 @@ output:
     social: [ "menu" ]
     source_code: "embed"
     theme: bootstrap #yeti #lumen
-    logo: logo.png
+    logo: img/logo.png
 ---
 
 ```{r setup, include=FALSE}
@@ -31,6 +31,7 @@ library(highcharter)
 library(lubridate)
 library(sparkline)
 library(htmlwidgets)
+library(printr)
 ```
 
 # General 
@@ -42,15 +43,30 @@ Column {data-width=500 .tabset}
 
 ### Overview
 
-> adicionar imagens ou recursos dinâmicos
+<br> </br>
 
-> - __52,000,000__ Total Registers - Scopus \n
-> - __4.13%__ Growth Rate - Scopus \n
-> - __17 Years__ Doubling Time - Scopus \n
+<h4>  Qual área de pesquisa é emergente?  </h4> 
+<h4>  Qual pesquisador contratar?  </h4> 
+<h4>  Qual patente comprar?  </h4> 
 
-> - __13,516__ Total Registers - Shelf Life \n
-> - __12.9%__ Growth Rate - Shelf Life \n
-> - __5.6__ Years Doubling Time - Shelf Life \n
+<br> </br>
+
+<h4>  Adicionar uma sentença sobre Shelf Life, para catecterizar a área de pesquisa.  </h4> 
+
+<br> </br>
+
+> - __Shelf Life__
+> - 13,516 Registers \n
+> - 12.9% Growth Rate  \n
+> - 5.6 Years Doubling Time \n
+
+<br> </br>
+
+> - __Scopus__
+> - 52,000,000 Registers \n
+> - 4.13% Growth Rate  \n
+> - 17 Years Doubling Time \n
+
 
 >
 
@@ -60,7 +76,7 @@ Column {data-width=500 .tabset}
 
 ```{r, out.width='75%'}
 # graphics
-import('shelf_life_growth.txt') %>>% 
+import('data/shelf_life_growth.txt') %>>% 
     as_tibble %>>% 
     rename(PY = V1, publications = V2 ) %>>% 
     dplyr::filter(PY %in% c(1980:2019)) %>>% 
@@ -71,7 +87,6 @@ import('shelf_life_growth.txt') %>>%
 d$lnp <- log(d$publications)
 
 PY <- d$PY
-d$est1 <- NA
 
 d$est <- ifelse(PY <= 1986.0, -441.3+(0.2239)*PY,
                 ifelse(PY<=1992.0, -441.3 + (0.2239)*1986.0 + 0.0511*(PY-1986.0), 
@@ -81,6 +96,7 @@ d$est <- ifelse(PY <= 1986.0, -441.3+(0.2239)*PY,
 
 d %>>% 
     mutate(ln_Publications=lnp, Year=PY) %>>% 
+    mutate(ln_Publications=round(ln_Publications,2), est=round(est,2)) %>>% 
     (. -> d2)
 
 hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
@@ -98,8 +114,8 @@ hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", 
     
 ```{r}
 
-netcoup <- import('netcoup.rds')
-a <- import('netcoup_grupos.rds')
+netcoup <- import('data/netcoup.rds')
+a <- import('data/netcoup_grupos.rds')
 
 netcoup %>>% 
     activate(nodes) %>>% 
@@ -116,7 +132,6 @@ netcoup %>>%
 hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
     hc_add_theme(hc_theme_elementary())  %>>% 
     hc_navigator( enabled = TRUE) 
-
 ```
 
 ### Groups Description
@@ -134,7 +149,7 @@ Column {data-width=500 .tabset}
 
 ```{r}
 # graphics
-import('shelf_life_growth.txt') %>>% 
+import('data/shelf_life_growth.txt') %>>% 
     as_tibble %>>% 
     rename(PY = V1, publications = V2 ) %>>% 
     dplyr::filter(PY %in% c(1980:2019)) %>>% 
@@ -163,6 +178,7 @@ d$predicted <- 12.159638*exp(0.121922*(d$PY-1980))
 
 d %>>% 
     mutate(Publications=publications, Year=PY) %>>% 
+    mutate(predicted=round(predicted,0)) %>>% 
     (. -> d2)
 
 hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", showInLegend = TRUE) %>>%
@@ -171,11 +187,11 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
     hc_navigator( enabled = TRUE) 
 ```
 
-### visNetwork
+### Networks
 
 ```{r}
-netcoup <- import('netcoup.rds') 
-hubs <- import('netcoup_hubs.rds') 
+netcoup <- import('data/netcoup.rds') 
+hubs <- import('data/netcoup_hubs.rds') 
 
 hubs %>>% 
     select(SR,Ki) %>>% 
@@ -186,124 +202,48 @@ netcoup %>>%
     left_join(hubs2) %>>% 
     (. -> netcoup)
 
-netcoup %>>% 
-    as_tbl_graph() %>>% 
-    activate(nodes) %>>% 
-    as_tibble %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    group_by(grupo) %>>% 
-    slice_max(TC, prop=.05) %>>% 
-    (. -> topn)
+# ALTERAR AQUI
+ano <- 1990 
 
 netcoup %>>% 
     as_tbl_graph() %>>% 
     activate(nodes) %>>% 
-    dplyr::filter(name %in% topn$name) %>>% 
+    mutate(label=name) %>>% 
+    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    dplyr::filter(PY <= ano) %>>%  
     (. -> netcoup2)
 
 tibble(id=1:length(V(netcoup2)),
-       label=NA,
+       label= V(netcoup2)$label,
        group=V(netcoup2)$grupo,
-       size=ifelse(V(netcoup2)$Ki==0,0.01,V(netcoup2)$Ki/30)
+       year=V(netcoup2)$PY
        ) %>>% 
 (. -> nodes)
 
 tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
-       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to),
-       value=0.01,
-       label=NA
+       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
        ) %>>% 
 (. -> edges)
 
-visNetwork(nodes, edges, height = "650px", width = "650px") %>%
-    visIgraphLayout() %>>%
-    visNodes(size = 2)  
-```
-
-### igraph + highcharter
-
-```{r}
-# netcoup <- import('netcoup.rds') 
-# hubs <- import('netcoup_hubs.rds') 
-# 
-# hubs %>>% 
-#     select(SR,Ki) %>>% 
-#     (. -> hubs2)
-# 
-# netcoup %>>% 
-#     activate(nodes) %>>% 
-#     left_join(hubs2) %>>% 
-#     (. -> netcoup)
-# 
-# netcoup %>>% 
-#     as_tbl_graph() %>>% 
-#     activate(nodes) %>>% 
-#     as_tibble %>>% 
-#     dplyr::filter(!is.na(grupo)) %>>% 
-#     group_by(grupo) %>>% 
-#     slice_max(TC, prop=.05) %>>% 
-#     (. -> topn)
-# 
-# netcoup %>>% 
-#     as_tbl_graph() %>>% 
-#     activate(nodes) %>>% 
-#     dplyr::filter(name %in% topn$name) %>>% 
-#     (. -> net)
-# 
-# net %>>% 
-#     activate(nodes) %>>% 
-#     as_tibble %>>% 
-#     mutate(label=name) %>>% 
-#     select(name,label) %>>% 
-#     mutate(label=paste(
-#                        gsub(' .*$','',label), 
-#                        gsub('.*\\.','',label),
-#                        sep='' 
-#                        )) %>>% 
-#     (. -> label)
-#     
-# net %>>% 
-#     activate(nodes) %>>% 
-#     left_join(label) %>>% 
-#     select(label,SR,PY,TI,DE,TC,Ki,grupo) %>>% 
-#     (. -> net)
-# 
-# V(net)$name <- V(net)$label
-# V(net)$color <- colorize(V(net)$grupo)
-# V(net)$size <- V(net)$Ki/10
-# 
-# l <- layout_on_sphere(net)
-# l <- layout_with_graphopt(net) # bom
-# l <- layout_nicely(net) 
-# l <- layout_with_fr(net) 
-
-# png(filename="network.png", width = 7, height = 7, units = 'in', res = 300)
-# p <- plot(
-#      net,         
-#      layout = l,
-#      vertex.label = NA,         
-#      vertex.label.font = 1,              
-#      vertex.size = V(net)$Ki/30,
-#      )
-# dev.off()
-# 
-
-library(igraph)
-N <- 40
-
-net <- sample_gnp(N, p = 2 / N)
-wc <- cluster_walktrap(net)
-
-V(net)$label <- seq(N)
-V(net)$name <- paste("I'm #", seq(N))
-V(net)$page_rank <- round(page.rank(net)$vector, 2)
-V(net)$betweenness <- round(betweenness(net), 2)
-V(net)$degree <- degree(net)
-V(net)$size <- V(net)$degree
-V(net)$comm <- membership(wc)
-V(net)$color <- colorize(membership(wc))
-
-hchart(net, layout = layout_with_fr)
+visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(V(netcoup2)$PY))) %>%
+    visNodes(size = 10) %>>% 
+    visEdges(width = 2, hidden=F)  %>>% 
+    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
+    visPhysics(stabilization = T) %>>% 
+    visGroups(groupname = "g01", color = "#38501e") %>>% 
+    visGroups(groupname = "g02", color = "#23331e") %>>% 
+    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
+    visGroups(groupname = "g04", color = "#472926") %>>% 
+    visGroups(groupname = "g05", color = "#926433") %>>% 
+    visGroups(groupname = "g06", color = "#a90a26") %>>% 
+    visGroups(groupname = "g07", color = "#97863e") %>>% 
+    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
+    visGroups(groupname = "g09", color = "#d48d01") %>>% 
+    visGroups(groupname = "g10", color = "#021338") %>>% 
+    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
+    visGroups(groupname = "g12", color = "#9eb739") %>>% 
+    visGroups(groupname = "g13", color = "#808080") 
 ```
 
 
@@ -346,16 +286,17 @@ data.frame(Groups=grupos,Coef=res) %>>%
     as_tibble %>>% 
     mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
     dplyr::select(-Coef) %>>% 
-    left_join(import('netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
+    left_join(import('data/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
     dplyr::arrange(Groups) %>>% 
     (. -> grupoAnoCrescimento) %>>%     
     dplyr::rename(AverageAge = PY.m) %>>% 
     dplyr::rename(TotalPapers = qtde.papers) %>>% 
     mutate(AverageAge = round(AverageAge,1)) %>>% 
-    left_join(import('ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
+    left_join(import('data/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
     mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
     relocate(Description, .after=Groups) %>>% 
     select(-Description) %>>% 
+    rename(Group = Groups) %>>% 
     datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  %>>% 
     formatRound('GrowthRateYear',1)
 ```
