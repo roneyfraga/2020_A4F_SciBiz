@@ -2,7 +2,8 @@
 # TODO
 
 - Shelf Life Segmented Growth
-    - update and build in ggplot2
+    - [X] build graph
+    - [X] `hchart` add vertical lines
 
 - visNetwork
     - include group selector
@@ -14,13 +15,14 @@ or
 ## Layout
 
 - página 1
-- duas colunas com tabs em cada uma delas
+    - [X] duas colunas com tabs em cada uma delas
 
 - página 2
-- seletor de grupos no sidebar para mostrar as análises desejadas
+    - seletor de grupos no sidebar para mostrar as análises desejadas
 
 - página 3
-- conclusão
+    - conclusão
+    - adicionar uma apresentação feita em javascript
 
 
 ## Grupos 
