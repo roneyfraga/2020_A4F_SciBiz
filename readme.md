@@ -4,6 +4,7 @@
 - [ ] incluir documento html dentro de uma tab
 
 - [ ] deploy `shiny` no meu servidor
+    - [digital ocean](https://www.digitalocean.com/community/tutorials/how-to-install-r-packages-using-devtools-on-ubuntu-16-04)
 
 - [ ] botão exportar no `hchart`
 

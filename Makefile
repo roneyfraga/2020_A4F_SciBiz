@@ -3,6 +3,9 @@ file=index
 flex:
 	Rscript -e 'library(rmarkdown);rmarkdown::render("$(file).Rmd")'
 
+run:
+	Rscript -e 'library(rmarkdown);rmarkdown::run("$(file).Rmd", shiny_args = list(port = 4040))'
+
 open:
 	qutebrowser $(file).html &
 
