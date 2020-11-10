@@ -95,7 +95,67 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
 ```
 
 
-### Groups Growth
+### Networks
+
+```{r}
+netcoup <- import('data/netcoup.rds') 
+hubs <- import('data/netcoup_hubs.rds') 
+
+hubs %>>% 
+    select(SR,Ki) %>>% 
+    (. -> hubs2)
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    left_join(hubs2) %>>% 
+    (. -> netcoup)
+
+# ALTERAR AQUI
+ano <- 1990 
+
+netcoup %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    mutate(label=name) %>>% 
+    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    dplyr::filter(PY <= ano) %>>%  
+    (. -> netcoup2)
+
+tibble(id=1:length(V(netcoup2)),
+       label= V(netcoup2)$label,
+       group=V(netcoup2)$grupo,
+       year=V(netcoup2)$PY
+       ) %>>% 
+(. -> nodes)
+
+tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
+       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
+       ) %>>% 
+(. -> edges)
+
+visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(V(netcoup2)$PY))) %>%
+    visNodes(size = 10, shape='dot') %>>% 
+    visEdges(width = 2, hidden=F)  %>>% 
+    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
+    visPhysics(stabilization = T) %>>% 
+    visGroups(groupname = "g01", color = "#38501e") %>>% 
+    visGroups(groupname = "g02", color = "#23331e") %>>% 
+    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
+    visGroups(groupname = "g04", color = "#472926") %>>% 
+    visGroups(groupname = "g05", color = "#926433") %>>% 
+    visGroups(groupname = "g06", color = "#a90a26") %>>% 
+    visGroups(groupname = "g07", color = "#97863e") %>>% 
+    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
+    visGroups(groupname = "g09", color = "#d48d01") %>>% 
+    visGroups(groupname = "g10", color = "#021338") %>>% 
+    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
+    visGroups(groupname = "g12", color = "#9eb739") %>>% 
+    visGroups(groupname = "g13", color = "#808080") 
+```
+
+
+### Groups Attributes
     
 ```{r}
 
@@ -114,18 +174,57 @@ netcoup %>>%
     dplyr::mutate(Group=grupo,Publications = n, Year = PY) %>>% 
     (. -> grupoAno)
 
-hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
-    hc_add_theme(hc_theme_elementary())  %>>% 
-    hc_navigator( enabled = TRUE) 
-```
+grupos <- sort(unique(grupoAno$Group))
 
+# grupos <- grupos[1:3]
 
-### Groups Description
+res <- vector('double', length(grupos))
+
+for(i in seq_along(grupos)){ 
+
+    grupoAno %>>% 
+        dplyr::select(PY,n,Group) %>>% 
+        dplyr::rename(publications = n) %>>% 
+        dplyr::filter(PY >= 2000) %>>% 
+        dplyr::arrange(PY) %>>%  
+        dplyr::filter(Group==grupos[[i]]) %>>%
+        dplyr::mutate(trend=1:n()) %>>%
+        dplyr::mutate(lnp=log(publications)) %>>%
+        (. -> d) 
+
+    # ajustar parametros via mqo 
+    m1 <- lm(lnp ~ trend, data=d)
+    beta0 <- m1$coefficients[[1]]
+    beta1 <- m1$coefficients[[2]]
     
-```{r}
-data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
-    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
+    # modelo não linear
+    m2 <- nls(publications ~ b0*exp(b1*(PY-2010)), start = list(b0=beta0, b1=beta1), data=d)
+    res[[i]] <- coef(m2)[2]
+
+}
+
+# print(xtable(grupoAnoCrescimento, type = "latex"))
+
+data.frame(Groups=grupos,Coef=res) %>>% 
+    as_tibble %>>% 
+    mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
+    dplyr::select(-Coef) %>>% 
+    left_join(import('data/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
+    dplyr::arrange(Groups) %>>% 
+    (. -> grupoAnoCrescimento) %>>%     
+    dplyr::rename(AverageAge = PY.m) %>>% 
+    dplyr::rename(TotalPapers = qtde.papers) %>>% 
+    mutate(AverageAge = round(AverageAge,1)) %>>% 
+    left_join(import('data/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
+    mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
+    relocate(Description, .after=Groups) %>>% 
+    select(-Description) %>>% 
+    rename(Group = Groups) %>>% 
+    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  %>>% 
+    formatRound('GrowthRateYear',1)
 ```
+
+
 
 
 Column {data-width=500 .tabset}
@@ -193,118 +292,36 @@ hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", 
 ```
 
 
-### Networks
-
+### Groups Growth
+    
 ```{r}
-netcoup <- import('data/netcoup.rds') 
-hubs <- import('data/netcoup_hubs.rds') 
 
-hubs %>>% 
-    select(SR,Ki) %>>% 
-    (. -> hubs2)
+netcoup <- import('data/netcoup.rds')
+a <- import('data/netcoup_grupos.rds')
 
 netcoup %>>% 
     activate(nodes) %>>% 
-    left_join(hubs2) %>>% 
-    (. -> netcoup)
-
-# ALTERAR AQUI
-ano <- 1990 
-
-netcoup %>>% 
-    as_tbl_graph() %>>% 
-    activate(nodes) %>>% 
-    mutate(label=name) %>>% 
-    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
+    as_tibble %>>% 
     dplyr::filter(!is.na(grupo)) %>>% 
-    dplyr::filter(PY <= ano) %>>%  
-    (. -> netcoup2)
+    group_by(PY,grupo) %>>% 
+    tally(sort=TRUE) %>>% 
+    arrange(grupo,desc(PY)) %>>% 
+    ungroup %>>% 
+    dplyr::filter(PY %in% c(2000:2019)) %>>% 
+    dplyr::mutate(Group=grupo,Publications = n, Year = PY) %>>% 
+    (. -> grupoAno)
 
-tibble(id=1:length(V(netcoup2)),
-       label= V(netcoup2)$label,
-       group=V(netcoup2)$grupo,
-       year=V(netcoup2)$PY
-       ) %>>% 
-(. -> nodes)
-
-tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
-       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
-       ) %>>% 
-(. -> edges)
-
-visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(V(netcoup2)$PY))) %>%
-    visNodes(size = 10, shape='dot') %>>% 
-    visEdges(width = 2, hidden=F)  %>>% 
-    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
-    visPhysics(stabilization = T) %>>% 
-    visGroups(groupname = "g01", color = "#38501e") %>>% 
-    visGroups(groupname = "g02", color = "#23331e") %>>% 
-    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
-    visGroups(groupname = "g04", color = "#472926") %>>% 
-    visGroups(groupname = "g05", color = "#926433") %>>% 
-    visGroups(groupname = "g06", color = "#a90a26") %>>% 
-    visGroups(groupname = "g07", color = "#97863e") %>>% 
-    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
-    visGroups(groupname = "g09", color = "#d48d01") %>>% 
-    visGroups(groupname = "g10", color = "#021338") %>>% 
-    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
-    visGroups(groupname = "g12", color = "#9eb739") %>>% 
-    visGroups(groupname = "g13", color = "#808080") 
+hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
+    hc_add_theme(hc_theme_elementary())  %>>% 
+    hc_navigator( enabled = TRUE) 
 ```
 
 
-### Groups Attributes
+### Groups Description
     
 ```{r}
-
-grupos <- sort(unique(grupoAno$Group))
-
-# grupos <- grupos[1:3]
-
-res <- vector('double', length(grupos))
-
-for(i in seq_along(grupos)){ 
-
-    grupoAno %>>% 
-        dplyr::select(PY,n,Group) %>>% 
-        dplyr::rename(publications = n) %>>% 
-        dplyr::filter(PY >= 2000) %>>% 
-        dplyr::arrange(PY) %>>%  
-        dplyr::filter(Group==grupos[[i]]) %>>%
-        dplyr::mutate(trend=1:n()) %>>%
-        dplyr::mutate(lnp=log(publications)) %>>%
-        (. -> d) 
-
-    # ajustar parametros via mqo 
-    m1 <- lm(lnp ~ trend, data=d)
-    beta0 <- m1$coefficients[[1]]
-    beta1 <- m1$coefficients[[2]]
-    
-    # modelo não linear
-    m2 <- nls(publications ~ b0*exp(b1*(PY-2010)), start = list(b0=beta0, b1=beta1), data=d)
-    res[[i]] <- coef(m2)[2]
-
-}
-
-# print(xtable(grupoAnoCrescimento, type = "latex"))
-
-data.frame(Groups=grupos,Coef=res) %>>% 
-    as_tibble %>>% 
-    mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
-    dplyr::select(-Coef) %>>% 
-    left_join(import('data/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
-    dplyr::arrange(Groups) %>>% 
-    (. -> grupoAnoCrescimento) %>>%     
-    dplyr::rename(AverageAge = PY.m) %>>% 
-    dplyr::rename(TotalPapers = qtde.papers) %>>% 
-    mutate(AverageAge = round(AverageAge,1)) %>>% 
-    left_join(import('data/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
-    mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
-    relocate(Description, .after=Groups) %>>% 
-    select(-Description) %>>% 
-    rename(Group = Groups) %>>% 
-    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  %>>% 
-    formatRound('GrowthRateYear',1)
+data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
+    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
 ```
 
 # g01 {data-navmenu="Groups"}
