@@ -12,10 +12,11 @@
     - [X] build graph
     - [X] `hchart` add vertical lines
 
-- visNetwork
+- visNetwork (ainda em aberto, mas agora com `shiny`)
     - include group selector
     - improve layout
     - gif with ggraph?
+    - [graphlayouts](https://github.com/schochastics/graphlayouts)
 or
 - higcharter + igraph
     - include colors by group
