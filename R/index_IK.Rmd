@@ -1,0 +1,112 @@
+---
+title: "A4F - IK"
+output: 
+  flexdashboard::flex_dashboard:
+    navbar:
+      - { title: "<b>Research</b>", href: "http://roneyfraga.com/dash/2020_A4F", align: right }
+      - { title: "People", href: "http://roneyfraga.com/dash/2020_A4F/#pessoas", align: right }
+      - { title: "Patent", href: "http://roneyfraga.com/dash/2020_A4F/#pessoas", align: right }
+      - { title: "About", href: "http://roneyfraga.com/", align: right }
+    social: [ "menu" ]
+    source_code: "embed"
+    theme: bootstrap #yeti #lumen
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+options(scipen=999)
+library(rmarkdown)
+library(flexdashboard)
+library(pipeR)
+library(tidyverse)
+library(rio)
+library(ggraph)
+library(tidygraph)
+library(DT)
+library(plotly)
+library(visNetwork)
+library(igraph)
+library(ggthemes)
+library(highcharter)
+library(lubridate)
+library(sparkline)
+library(htmlwidgets)
+library(printr)
+library(shiny)
+```
+
+# General 
+
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+
+### Networks
+
+```{r}
+            
+selectInput("select_ano", label = "Visualization Year:", choices = c(1985, 1990))
+
+netcoup <- import('../data/netcoup.rds') 
+hubs <- import('../data/netcoup_hubs.rds') 
+
+teste <- reactive({
+hubs %>>% 
+    select(SR,Ki) %>>% 
+    (. -> hubs2)
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    left_join(hubs2) %>>% 
+    (. -> netcoup)
+
+netcoup %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    mutate(label=name) %>>% 
+    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    dplyr::filter(PY <= input$select_ano) %>>%  
+    (. -> netcoup2)
+
+tibble(id=1:length(V(netcoup2)),
+       label= V(netcoup2)$label,
+       group=V(netcoup2)$grupo,
+       year=V(netcoup2)$PY
+       ) %>>% 
+(. -> nodes)
+
+tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
+       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
+       ) %>>% 
+(. -> edges)
+
+visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(V(netcoup2)$PY))) %>%
+    visNodes(size = 10) %>>% 
+    visEdges(width = 2, hidden=F)  %>>% 
+    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
+    visPhysics(stabilization = T) %>>% 
+    visGroups(groupname = "g01", color = "#38501e") %>>% 
+    visGroups(groupname = "g02", color = "#23331e") %>>% 
+    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
+    visGroups(groupname = "g04", color = "#472926") %>>% 
+    visGroups(groupname = "g05", color = "#926433") %>>% 
+    visGroups(groupname = "g06", color = "#a90a26") %>>% 
+    visGroups(groupname = "g07", color = "#97863e") %>>% 
+    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
+    visGroups(groupname = "g09", color = "#d48d01") %>>% 
+    visGroups(groupname = "g10", color = "#021338") %>>% 
+    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
+    visGroups(groupname = "g12", color = "#9eb739") %>>% 
+    visGroups(groupname = "g13", color = "#808080") 
+})
+
+renderVisNetwork({
+  teste()
+})
+
+```
+
+
+

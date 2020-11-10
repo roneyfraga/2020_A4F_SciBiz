@@ -20,8 +20,8 @@ library(igraph)
 
 ```{r echo=F, warning=F, message=F}
 
-netcoup <- import('/home/roney/OneDrive/Rworkspace/2020 A4F ShelfLife Dashboard/netcoup.rds') 
-hubs <- import('/home/roney/OneDrive/Rworkspace/2020 A4F ShelfLife Dashboard/netcoup_hubs.rds') 
+netcoup <- import('../data/netcoup.rds') 
+hubs <- import('../data/netcoup_hubs.rds') 
 
 hubs %>>% 
     select(SR,Ki) %>>% 

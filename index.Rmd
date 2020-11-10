@@ -41,109 +41,16 @@ Column {data-width=500 .tabset}
 -------------------------------------
 
 
-### Overview
+### Target
 
 <br> </br>
-
-<h4>  Qual área de pesquisa é emergente?  </h4> 
-<h4>  Qual pesquisador contratar?  </h4> 
-<h4>  Qual patente comprar?  </h4> 
-
+<h3>  Qual área de pesquisa é emergente?  </h3> 
+<br> </br>
+<h3>  Qual pesquisador contratar?  </h3> 
+<br> </br>
+<h3>  Qual patente comprar?  </h3> 
 <br> </br>
 
-<h4>  Adicionar uma sentença sobre Shelf Life, para catecterizar a área de pesquisa.  </h4> 
-
-<br> </br>
-
-> - __Shelf Life__
-> - 13,516 Registers \n
-> - 12.9% Growth Rate  \n
-> - 5.6 Years Doubling Time \n
-
-<br> </br>
-
-> - __Scopus__
-> - 52,000,000 Registers \n
-> - 4.13% Growth Rate  \n
-> - 17 Years Doubling Time \n
-
-
->
-
-### Segmented Growth
-
-<!-- Talvez fazer esse gráfico no ggplot2  -->
-
-```{r, out.width='75%'}
-# graphics
-import('data/shelf_life_growth.txt') %>>% 
-    as_tibble %>>% 
-    rename(PY = V1, publications = V2 ) %>>% 
-    dplyr::filter(PY %in% c(1980:2019)) %>>% 
-    dplyr::arrange(PY) %>>% 
-    dplyr::mutate(trend=1:n()) %>>% 
-    (. -> d)
-
-d$lnp <- log(d$publications)
-
-PY <- d$PY
-
-d$est <- ifelse(PY <= 1986.0, -441.3+(0.2239)*PY,
-                ifelse(PY<=1992.0, -441.3 + (0.2239)*1986.0 + 0.0511*(PY-1986.0), 
-                       ifelse(PY<=2004.8, -441.3 + (0.2239)*1986.0 + 0.0511*(1992.0-1986.0) + 0.1510*(PY-1992.0), 
-                              -441.3 +  (0.2239)*1986.0 + 0.0511*(1992.0-1986.0) + 0.1510*(2004.8-1992.0) + 0.1186*(PY-2004.8)
-                    )))
-
-d %>>% 
-    mutate(ln_Publications=lnp, Year=PY) %>>% 
-    mutate(ln_Publications=round(ln_Publications,2), est=round(est,2)) %>>% 
-    (. -> d2)
-
-hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
-    hc_add_series(d2, "line", hcaes(x = Year, y = est), name = "Segmented Regression", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
-    hc_add_theme(hc_theme_elementary()) %>>% 
-    hc_navigator( enabled = TRUE) %>>% 
-    hc_xAxis( plotBands = list( list( from = 1986, to = 1986, color = "#330000" ),
-                                list( from = 1992, to = 1992, color = "#330000" ),
-                                list( from = 2004, to = 2004, color = "#330000" )
-                               ))
-```
-
-
-### Groups Growth
-    
-```{r}
-
-netcoup <- import('data/netcoup.rds')
-a <- import('data/netcoup_grupos.rds')
-
-netcoup %>>% 
-    activate(nodes) %>>% 
-    as_tibble %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    group_by(PY,grupo) %>>% 
-    tally(sort=TRUE) %>>% 
-    arrange(grupo,desc(PY)) %>>% 
-    ungroup %>>% 
-    dplyr::filter(PY %in% c(2000:2019)) %>>% 
-    dplyr::mutate(Group=grupo,Publications = n, Year = PY) %>>% 
-    (. -> grupoAno)
-
-hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
-    hc_add_theme(hc_theme_elementary())  %>>% 
-    hc_navigator( enabled = TRUE) 
-```
-
-### Groups Description
-    
-```{r}
-data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
-    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
-```
-
-
-Column {data-width=500 .tabset}
--------------------------------------
 
 ### Growth
 
@@ -187,6 +94,105 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
     hc_navigator( enabled = TRUE) 
 ```
 
+
+### Groups Growth
+    
+```{r}
+
+netcoup <- import('data/netcoup.rds')
+a <- import('data/netcoup_grupos.rds')
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    group_by(PY,grupo) %>>% 
+    tally(sort=TRUE) %>>% 
+    arrange(grupo,desc(PY)) %>>% 
+    ungroup %>>% 
+    dplyr::filter(PY %in% c(2000:2019)) %>>% 
+    dplyr::mutate(Group=grupo,Publications = n, Year = PY) %>>% 
+    (. -> grupoAno)
+
+hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
+    hc_add_theme(hc_theme_elementary())  %>>% 
+    hc_navigator( enabled = TRUE) 
+```
+
+
+### Groups Description
+    
+```{r}
+data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
+    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
+```
+
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+### Shelf Life
+
+<br> </br>
+
+<h4>  Adicionar uma sentença sobre Shelf Life, para catecterizar a área de pesquisa.  </h4> 
+
+<br> </br>
+
+> - __Shelf Life__
+> - 13,516 Registers \n
+> - 12.9% Growth Rate  \n
+> - 5.6 Years Doubling Time \n
+
+<br> </br>
+
+> - __Scopus__
+> - 52,000,000 Registers \n
+> - 4.13% Growth Rate  \n
+> - 17 Years Doubling Time \n
+
+>
+
+### Segmented Growth
+
+<!-- Talvez fazer esse gráfico no ggplot2  -->
+
+```{r, out.width='75%'}
+# graphics
+import('data/shelf_life_growth.txt') %>>% 
+    as_tibble %>>% 
+    rename(PY = V1, publications = V2 ) %>>% 
+    dplyr::filter(PY %in% c(1980:2019)) %>>% 
+    dplyr::arrange(PY) %>>% 
+    dplyr::mutate(trend=1:n()) %>>% 
+    (. -> d)
+
+d$lnp <- log(d$publications)
+
+PY <- d$PY
+
+d$est <- ifelse(PY <= 1986.0, -441.3+(0.2239)*PY,
+                ifelse(PY<=1992.0, -441.3 + (0.2239)*1986.0 + 0.0511*(PY-1986.0), 
+                       ifelse(PY<=2004.8, -441.3 + (0.2239)*1986.0 + 0.0511*(1992.0-1986.0) + 0.1510*(PY-1992.0), 
+                              -441.3 +  (0.2239)*1986.0 + 0.0511*(1992.0-1986.0) + 0.1510*(2004.8-1992.0) + 0.1186*(PY-2004.8)
+                    )))
+
+d %>>% 
+    mutate(ln_Publications=lnp, Year=PY) %>>% 
+    mutate(ln_Publications=round(ln_Publications,2), est=round(est,2)) %>>% 
+    (. -> d2)
+
+hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
+    hc_add_series(d2, "line", hcaes(x = Year, y = est), name = "Segmented Regression", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
+    hc_add_theme(hc_theme_elementary()) %>>% 
+    hc_navigator( enabled = TRUE) %>>% 
+    hc_xAxis( plotBands = list( list( from = 1986, to = 1986, color = "#330000" ),
+                                list( from = 1992, to = 1992, color = "#330000" ),
+                                list( from = 2004, to = 2004, color = "#330000" )
+                               ))
+```
+
+
 ### Networks
 
 ```{r}
@@ -227,7 +233,7 @@ tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
 (. -> edges)
 
 visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(V(netcoup2)$PY))) %>%
-    visNodes(size = 10) %>>% 
+    visNodes(size = 10, shape='dot') %>>% 
     visEdges(width = 2, hidden=F)  %>>% 
     visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
     visPhysics(stabilization = T) %>>% 
