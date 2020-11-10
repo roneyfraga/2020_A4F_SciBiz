@@ -1,6 +1,12 @@
 
 # TODO
 
+- [ ] incluir documento html dentro de uma tab
+
+- [ ] deploy `shiny` no meu servidor
+
+- [ ] botão exportar no `hchart`
+
 - Shelf Life Segmented Growth
     - [X] build graph
     - [X] `hchart` add vertical lines

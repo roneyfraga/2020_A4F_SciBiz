@@ -4,13 +4,14 @@ output:
   flexdashboard::flex_dashboard:
     navbar:
       - { title: "<b>Research</b>", href: "http://roneyfraga.com/dash/2020_A4F", align: right }
-      - { title: "People", href: "http://roneyfraga.com/dash/2020_A4F/#pessoas", align: right }
-      - { title: "Patent", href: "http://roneyfraga.com/dash/2020_A4F/#pessoas", align: right }
+      - { title: "People", href: "http://roneyfraga.com/dash/2020_A4F/#people", align: right }
+      - { title: "Patent", href: "http://roneyfraga.com/dash/2020_A4F/#patent", align: right }
       - { title: "About", href: "http://roneyfraga.com/", align: right }
     social: [ "menu" ]
     source_code: "embed"
     theme: bootstrap #yeti #lumen
     logo: img/logo.png
+runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -32,6 +33,7 @@ library(lubridate)
 library(sparkline)
 library(htmlwidgets)
 library(printr)
+library(shiny)
 ```
 
 # General 
@@ -324,15 +326,30 @@ data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grup
     datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
 ```
 
+
 # g01 {data-navmenu="Groups"}
+    
+```{r}
+data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
+    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
 
-Em construção. 
-
+```
 
 # g02 {data-navmenu="Groups"}
 
-Em construção. 
+### frame 1 teset
 
+```{r echo=F}
+numericInput("obs", label = "Number of carbs:", 2, min=1, max=8)
+
+show_mtcars <- reactive({
+    mtcars %>>% 
+        dplyr::filter(carb == input$obs)
+})
+
+renderTable(show_mtcars())
+
+```
 
 # g03 {data-navmenu="Groups"}
 
@@ -349,12 +366,12 @@ Em construção.
 Escrever algum texto para finalizar a análise.
 
 
-# Pessoas  {.hidden}
+# People  {.hidden}
 
-Em construção. 
+Adicionar os grandes números do Lattes. 
 
 
-# Patentes  {.hidden}
+# Patent  {.hidden}
 
 Em construção.
 
