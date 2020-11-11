@@ -2,11 +2,9 @@
 # TODO
 
 - [ ] incluir documento html dentro de uma tab
+    - [ver apresentação de Marlorie Hughes](https://www.youtube.com/watch?v=yott4quKN6s)
 
-- [x] deploy `shiny` on servers
-    - [ ] install `ggraph` on ubuntu_nyc
-
-- [ ] `hchart` export button
+- [ ] mudar endereço do app
 
 ## Network
 
@@ -16,7 +14,6 @@
     - gif with ggraph?
     - [graphlayouts](https://github.com/schochastics/graphlayouts)
     - higcharter + igraph
-    
 
 ## Layout
 
@@ -29,4 +26,5 @@
 - página 3
     - conclusão
     - adicionar uma apresentação feita em javascript
+
 

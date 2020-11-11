@@ -3,6 +3,9 @@ file=index
 flex:
 	Rscript -e 'library(rmarkdown);rmarkdown::render("$(file).Rmd")'
 
+run:
+	Rscript -e 'library(rmarkdown);rmarkdown::run("$(file).Rmd")'
+
 run_ufmt:
 	Rscript -e 'library(rmarkdown);rmarkdown::run("$(file).Rmd", shiny_args = list(host = "200.17.60.42", port = 19127, launch.browser= FALSE))'
 

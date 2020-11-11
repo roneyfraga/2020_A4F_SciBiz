@@ -14,6 +14,19 @@ output:
 runtime: shiny
 ---
 
+<!--
+Opções no chunk
+
+eval        incluir o resultado do código executado, pode ser logico ou numérico
+echo        mostrar o código 
+warning     mostrar mensagens de aviso
+error       mostrar mensagens de erro
+message     mostrar mensagens
+tidy        mostrar ajustar o código ao display, ignora identação
+comment     '##' ou qq símbolo, para os resultados dos códigos serem antecedidos por ##
+include     se falso, executa mas não inclui o chunk no relatório
+-->
+
 ```{r setup, include=FALSE}
 options(scipen=999)
 library(rmarkdown)
@@ -53,86 +66,26 @@ Column {data-width=500 .tabset}
 ### Growth
 
 ```{r}
-# graphics
-import('data/shelf_life_growth.txt') %>>% 
-    as_tibble %>>% 
-    rename(PY = V1, publications = V2 ) %>>% 
-    dplyr::filter(PY %in% c(1980:2019)) %>>% 
-    dplyr::arrange(PY) %>>% 
-    dplyr::mutate(trend=1:n()) %>>% 
-    (. -> d)
 
-# export(d, '~/OneDrive/Rworkspace/SASUniversityEdition/myfolder/shelf_life/shelf_life.csv')
-
-d$lnp <- log(d$publications)
-
-# ajustar parametros via mqo 
-m1 <- lm(lnp ~ trend, data=d)
-
-# summary(m1)
-
-beta0 <- m1$coefficients[[1]]
-beta1 <- m1$coefficients[[2]]
-
-# modelo não linear
-# 1980 é o primeiro ano da série
-m2 <- nls(publications ~ b0*exp(b1*(PY-1980)), start = list(b0=beta0, b1=beta1), data=d)
-
-# publications estimado
-d$predicted <- 12.159638*exp(0.121922*(d$PY-1980))
-
-d %>>% 
-    mutate(Publications=publications, Year=PY) %>>% 
-    mutate(predicted=round(predicted,0)) %>>% 
-    (. -> d2)
+import('data/growth_shelf_life.rds') %>>% (. -> d2)
 
 hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", showInLegend = TRUE) %>>%
     hc_add_series(d2, "line", hcaes(x = Year, y = predicted), name = "Predicted", showInLegend = TRUE) %>>% 
     hc_add_theme(hc_theme_elementary()) %>>%
-    hc_navigator( enabled = TRUE) 
+    hc_navigator( enabled = TRUE)  %>>% 
+    hc_exporting( enabled = TRUE, filename='groups_growth')
 ```
 
 
 ### Networks
 
 ```{r}
-netcoup <- import('data/netcoup.rds') 
-hubs <- import('data/netcoup_hubs.rds') 
 
-hubs %>>% 
-    select(SR,Ki) %>>% 
-    (. -> hubs2)
+import('data/networks.rds') %>>% 
+    (~ .$nodes -> nodes) %>>% 
+    (.$edges -> edges)
 
-netcoup %>>% 
-    activate(nodes) %>>% 
-    left_join(hubs2) %>>% 
-    (. -> netcoup)
-
-# ALTERAR AQUI
-ano <- 1990 
-
-netcoup %>>% 
-    as_tbl_graph() %>>% 
-    activate(nodes) %>>% 
-    mutate(label=name) %>>% 
-    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    dplyr::filter(PY <= ano) %>>%  
-    (. -> netcoup2)
-
-tibble(id=1:length(V(netcoup2)),
-       label= V(netcoup2)$label,
-       group=V(netcoup2)$grupo,
-       year=V(netcoup2)$PY
-       ) %>>% 
-(. -> nodes)
-
-tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
-       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
-       ) %>>% 
-(. -> edges)
-
-visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(V(netcoup2)$PY))) %>%
+visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(nodes$PY))) %>%
     visNodes(size = 10, shape='dot') %>>% 
     visEdges(width = 2, hidden=F)  %>>% 
     visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
@@ -156,69 +109,14 @@ visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(m
 ### Groups Attributes
     
 ```{r}
-
-netcoup <- import('data/netcoup.rds')
-a <- import('data/netcoup_grupos.rds')
-
-netcoup %>>% 
-    activate(nodes) %>>% 
-    as_tibble %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    group_by(PY,grupo) %>>% 
-    tally(sort=TRUE) %>>% 
-    arrange(grupo,desc(PY)) %>>% 
-    ungroup %>>% 
-    dplyr::filter(PY %in% c(2000:2019)) %>>% 
-    dplyr::mutate(Group=grupo,Publications = n, Year = PY) %>>% 
-    (. -> grupoAno)
-
-grupos <- sort(unique(grupoAno$Group))
-
-# grupos <- grupos[1:3]
-
-res <- vector('double', length(grupos))
-
-for(i in seq_along(grupos)){ 
-
-    grupoAno %>>% 
-        dplyr::select(PY,n,Group) %>>% 
-        dplyr::rename(publications = n) %>>% 
-        dplyr::filter(PY >= 2000) %>>% 
-        dplyr::arrange(PY) %>>%  
-        dplyr::filter(Group==grupos[[i]]) %>>%
-        dplyr::mutate(trend=1:n()) %>>%
-        dplyr::mutate(lnp=log(publications)) %>>%
-        (. -> d) 
-
-    # ajustar parametros via mqo 
-    m1 <- lm(lnp ~ trend, data=d)
-    beta0 <- m1$coefficients[[1]]
-    beta1 <- m1$coefficients[[2]]
-    
-    # modelo não linear
-    m2 <- nls(publications ~ b0*exp(b1*(PY-2010)), start = list(b0=beta0, b1=beta1), data=d)
-    res[[i]] <- coef(m2)[2]
-
-}
-
-# print(xtable(grupoAnoCrescimento, type = "latex"))
-
-data.frame(Groups=grupos,Coef=res) %>>% 
-    as_tibble %>>% 
-    mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
-    dplyr::select(-Coef) %>>% 
-    left_join(import('data/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
-    dplyr::arrange(Groups) %>>% 
-    (. -> grupoAnoCrescimento) %>>%     
-    dplyr::rename(AverageAge = PY.m) %>>% 
-    dplyr::rename(TotalPapers = qtde.papers) %>>% 
-    mutate(AverageAge = round(AverageAge,1)) %>>% 
-    left_join(import('data/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
-    mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
-    relocate(Description, .after=Groups) %>>% 
-    select(-Description) %>>% 
-    rename(Group = Groups) %>>% 
-    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  %>>% 
+import('data/groups_attributes.rds') %>>% 
+    datatable(extensions = 'Buttons', 
+              options = list( dom = 'Bfrtip',
+                             buttons = list(list( 
+                                                 extend='collection', 
+                                                 buttons = list(list(extend='csv',filename='data'),
+                                                                list(extend='excel',filename='data')),
+                                                 text='Download')))) %>>% 
     formatRound('GrowthRateYear',1)
 ```
 
@@ -255,34 +153,14 @@ Column {data-width=500 .tabset}
 <!-- Talvez fazer esse gráfico no ggplot2  -->
 
 ```{r, out.width='75%'}
-# graphics
-import('data/shelf_life_growth.txt') %>>% 
-    as_tibble %>>% 
-    rename(PY = V1, publications = V2 ) %>>% 
-    dplyr::filter(PY %in% c(1980:2019)) %>>% 
-    dplyr::arrange(PY) %>>% 
-    dplyr::mutate(trend=1:n()) %>>% 
-    (. -> d)
 
-d$lnp <- log(d$publications)
-
-PY <- d$PY
-
-d$est <- ifelse(PY <= 1986.0, -441.3+(0.2239)*PY,
-                ifelse(PY<=1992.0, -441.3 + (0.2239)*1986.0 + 0.0511*(PY-1986.0), 
-                       ifelse(PY<=2004.8, -441.3 + (0.2239)*1986.0 + 0.0511*(1992.0-1986.0) + 0.1510*(PY-1992.0), 
-                              -441.3 +  (0.2239)*1986.0 + 0.0511*(1992.0-1986.0) + 0.1510*(2004.8-1992.0) + 0.1186*(PY-2004.8)
-                    )))
-
-d %>>% 
-    mutate(ln_Publications=lnp, Year=PY) %>>% 
-    mutate(ln_Publications=round(ln_Publications,2), est=round(est,2)) %>>% 
-    (. -> d2)
+import('data/segmented_growth.rds') %>>% (. -> d2)
 
 hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
     hc_add_series(d2, "line", hcaes(x = Year, y = est), name = "Segmented Regression", showInLegend = TRUE, fillOpacity = 0.2) %>>% 
     hc_add_theme(hc_theme_elementary()) %>>% 
     hc_navigator( enabled = TRUE) %>>% 
+    hc_exporting( enabled = TRUE, filename='segmented_growth') %>>% 
     hc_xAxis( plotBands = list( list( from = 1986, to = 1986, color = "#330000" ),
                                 list( from = 1992, to = 1992, color = "#330000" ),
                                 list( from = 2004, to = 2004, color = "#330000" )
@@ -293,25 +171,12 @@ hchart(d2, "line", hcaes(x = Year, y = ln_Publications), name = "Publications", 
 ### Groups Growth
     
 ```{r}
+import('data/groups_growth.rds') %>>% (. -> groups_growth)
 
-netcoup <- import('data/netcoup.rds')
-a <- import('data/netcoup_grupos.rds')
-
-netcoup %>>% 
-    activate(nodes) %>>% 
-    as_tibble %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    group_by(PY,grupo) %>>% 
-    tally(sort=TRUE) %>>% 
-    arrange(grupo,desc(PY)) %>>% 
-    ungroup %>>% 
-    dplyr::filter(PY %in% c(2000:2019)) %>>% 
-    dplyr::mutate(Group=grupo,Publications = n, Year = PY) %>>% 
-    (. -> grupoAno)
-
-hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
+hchart(groups_growth, "line", hcaes(x = Year, y = Publications, group = Group), fillOpacity = 0.2) %>>% 
     hc_add_theme(hc_theme_elementary())  %>>% 
-    hc_navigator( enabled = TRUE) 
+    hc_navigator( enabled = TRUE)  %>>% 
+    hc_exporting( enabled = TRUE, filename='groups_growth')
 ```
 
 
@@ -319,23 +184,21 @@ hchart(grupoAno, "line", hcaes(x = Year, y = Publications, group = Group), fillO
     
 ```{r}
 data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
-    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
+    datatable(extensions = 'Buttons', 
+              options = list( dom = 'Bfrtip',
+                             buttons = list(list( 
+                                                 extend='collection', 
+                                                 buttons = list(list(extend='csv',filename='data'),
+                                                                list(extend='excel',filename='data')),
+                                                 text='Download'))))
 ```
 
 
 # g01 {data-navmenu="Groups"}
     
-```{r}
-data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
-    datatable(options=list(pageLength=13, dom = 'tip'), rownames=F)  
+### Aplicação `shiny`
 
-```
-
-# g02 {data-navmenu="Groups"}
-
-### frame 1 teset
-
-```{r echo=F}
+```{r echo=F, eval=T}
 numericInput("obs", label = "Number of carbs:", 2, min=1, max=8)
 
 show_mtcars <- reactive({
@@ -347,15 +210,11 @@ renderTable(show_mtcars())
 
 ```
 
-# g03 {data-navmenu="Groups"}
+# g02 {data-navmenu="Groups"}
 
-Em construção. 
+### quadro limpo
 
-
-# g04 {data-navmenu="Groups"}
-
-Em construção. 
-
+> insert text here!
 
 # Conclusions
 
