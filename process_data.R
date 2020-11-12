@@ -393,18 +393,6 @@ hctreemap(tm, allowDrillToNode = TRUE, layoutAlgorithm = "squarified") %>%
   hc_title(text = "Gross National Income World Data") %>%
   hc_tooltip(pointFormat = )
 
-#
-install.packages(c('d3treeR'), dependencies=TRUE) 
-
-library(d3treeR)
-data(GNI2014)
-treex2<- treemap(GNI2014,
-        index=c("continent", "iso3"),
-        vSize="population",
-        vColor="GNI",
-        type="value",
-        format.legend = list(scientific = FALSE, big.mark = " "))
-d3tree2(treex2)
 
 # }}}
 

@@ -58,11 +58,11 @@ Column {data-width=500 .tabset}
 ### Target
 
 <br> </br>
-<h3>  Qual área de pesquisa é emergente?  </h3> 
+<h3>        - Qual área de pesquisa é emergente?  </h3> 
 <br> </br>
-<h3>  Qual pesquisador contratar?  </h3> 
+<h3>        - Qual pesquisador contratar?  </h3> 
 <br> </br>
-<h3>  Qual patente comprar?  </h3> 
+<h3>        - Qual patente comprar?  </h3> 
 <br> </br>
 
 
@@ -103,7 +103,6 @@ import('data/groups_attributes.rds') %>>%
 
 
 
-
 Column {data-width=500 .tabset}
 -------------------------------------
 
@@ -111,21 +110,23 @@ Column {data-width=500 .tabset}
 
 <br> </br>
 
-<h4>  Adicionar uma sentença sobre Shelf Life, para catecterizar a área de pesquisa.  </h4> 
+<h3>  - Shelf Life </h3> 
+<h4> O período total de tempo entre a data de fabricação, embalagem, transporte e armazenagem, que ainda permanece utilizável para o consumo pelo usuário final. </h4> 
 
 <br> </br>
 
-> - __Shelf Life__
-> - 13,516 Registers \n
-> - 12.9% Growth Rate  \n
-> - 5.6 Years Doubling Time \n
+
+<h3>  - Shelf Life Research </h3> 
+<h4> - 13,516 Registers \n </h4>
+<h4> - 12.9% Growth Rate \n </h4>
+<h4> - 5.6 Years Doubling Time \n </h4>
 
 <br> </br>
 
-> - __Scopus__
-> - 52,000,000 Registers \n
-> - 4.13% Growth Rate  \n
-> - 17 Years Doubling Time \n
+<h3> - Scopus Research </h3> 
+<h4> - 52,000,000 Registers \n </h4>
+<h4> - 4.13% Growth Rate \n </h4>
+<h4> - 17 Years Doubling Time \n </h4>
 
 >
 
