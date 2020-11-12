@@ -1,0 +1,14 @@
+Group;Description
+g01;Irradiação, microbiologia e perdas em alimentos 
+g02;Óleos essenciais, atividade antimicrobiana, embalagem a vácuo e microbiologia preditiva
+g03;Processos de irradiação
+g04;Oxidação lipídica e encapsulação
+g05;Embalagens ativas e nanotecnologia
+g06;Pós-colheita e armazenamento de produtos de origem vegetal
+g07;Irradiação em panificação
+g08;Processos envolvendo conservação por alta pressão
+g09;Conservação de vegetais e problemas causados pelo frio
+g10;Fenômenos de transporte de massa
+g11;Microbiologia em panificação
+g12;Leite e derivados
+g13;Panificação e amido

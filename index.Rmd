@@ -14,6 +14,7 @@ output:
 runtime: shiny
 ---
 
+
 <!--
 Opções no chunk
 
@@ -44,6 +45,7 @@ library(htmlwidgets)
 library(printr)
 library(shiny)
 ```
+
 
 # General 
 
@@ -81,28 +83,28 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
 
 ```{r}
 
-import('data/networks.rds') %>>% 
-    (~ .$nodes -> nodes) %>>% 
-    (.$edges -> edges)
+knitr::include_graphics('img/rede1_gmp.png')
 
-visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(max(nodes$PY))) %>%
-    visNodes(size = 10, shape='dot') %>>% 
-    visEdges(width = 2, hidden=F)  %>>% 
-    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
-    visPhysics(stabilization = T) %>>% 
-    visGroups(groupname = "g01", color = "#38501e") %>>% 
-    visGroups(groupname = "g02", color = "#23331e") %>>% 
-    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
-    visGroups(groupname = "g04", color = "#472926") %>>% 
-    visGroups(groupname = "g05", color = "#926433") %>>% 
-    visGroups(groupname = "g06", color = "#a90a26") %>>% 
-    visGroups(groupname = "g07", color = "#97863e") %>>% 
-    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
-    visGroups(groupname = "g09", color = "#d48d01") %>>% 
-    visGroups(groupname = "g10", color = "#021338") %>>% 
-    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
-    visGroups(groupname = "g12", color = "#9eb739") %>>% 
-    visGroups(groupname = "g13", color = "#808080") 
+# selectInput("select_ano", label = "Visualization Year:", choices = c(1985, 1990,1995,2000,2005,2010,2010,2019))
+# 
+# teste <- reactive({
+# 
+#     if(input$select_ano == 1985){
+#         knitr::include_graphics('img/rede1_gmp.png')
+#     } 
+#     if(input$select_ano == 1990){
+#         knitr::include_graphics('img/rede2_gmp.png')
+#     }
+#     else{
+#         knitr::include_graphics('img/rede3')
+#     }
+# })
+# 
+# renderImage({
+#   teste()
+# })
+
+
 ```
 
 
@@ -110,8 +112,8 @@ visNetwork(nodes, edges, height = "700px", width = "100%", main = as.character(m
     
 ```{r}
 import('data/groups_attributes.rds') %>>% 
-    datatable(extensions = 'Buttons', 
-              options = list( dom = 'Bfrtip',
+    datatable(extensions = 'Buttons', rownames=F,
+              options = list(dom = 'Bfrtip', pageLength = 13,
                              buttons = list(list( 
                                                  extend='collection', 
                                                  buttons = list(list(extend='csv',filename='data'),
@@ -183,9 +185,9 @@ hchart(groups_growth, "line", hcaes(x = Year, y = Publications, group = Group), 
 ### Groups Description
     
 ```{r}
-data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grupo') %>>% 
-    datatable(extensions = 'Buttons', 
-              options = list( dom = 'Bfrtip',
+import('data/groups_description.txt') %>>% 
+    datatable(extensions = 'Buttons', rownames=F,
+              options = list(dom = 'Bfrtip', pageLength = 13,
                              buttons = list(list( 
                                                  extend='collection', 
                                                  buttons = list(list(extend='csv',filename='data'),
@@ -198,7 +200,7 @@ data.frame(Group=paste0('g',1:13),Description='algum texto para descrever o grup
     
 ### Aplicação `shiny`
 
-```{r echo=F, eval=T}
+```{r }
 numericInput("obs", label = "Number of carbs:", 2, min=1, max=8)
 
 show_mtcars <- reactive({
@@ -212,13 +214,18 @@ renderTable(show_mtcars())
 
 # g02 {data-navmenu="Groups"}
 
-### quadro limpo
+### `include_url`
 
-> insert text here!
+```{r,dpi=240}
+knitr::include_url('inseption_html/ioslides_default.html')
+```
+
 
 # Conclusions
 
-Escrever algum texto para finalizar a análise.
+```{r,dpi=240}
+knitr::include_url('inseption_html/revealjs_defaults.html', height='100%')
+```
 
 
 # People  {.hidden}

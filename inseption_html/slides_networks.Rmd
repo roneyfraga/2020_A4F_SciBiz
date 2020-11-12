@@ -2,7 +2,11 @@
 title: "Networks"
 author: "Use arrow keys or space to navigate between networks"
 date: "Use mouse scrool to zoom-in and zoom-out inside networks"
-output: slidy_presentation
+output: 
+    ioslides_presentation:
+        widescreen: false
+        smaller: true
+        highlight: monochrome
 ---
 
 ```{r setup_slide, include=FALSE}

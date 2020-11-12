@@ -15,6 +15,7 @@ library(highcharter)
 library(htmlwidgets)
 library(printr)
 library(shiny)
+library(patchwork)
 # }}}
 
 ### Growth -------------------- {{{
@@ -206,5 +207,79 @@ netcoup %>>%
 
 # }}}
 
+### Network -------------------- {{{
+
+netcoup <- import('data/netcoup.rds') 
+hubs <- import('data/netcoup_hubs.rds') 
+
+hubs %>>% 
+    select(SR,Ki) %>>% 
+    (. -> hubs2)
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    left_join(hubs2) %>>% 
+    mutate(label=name) %>>% 
+    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    (. -> netcoup2)
+
+## 1985
+netcoup2 %>>% 
+    dplyr::filter(PY < 1985) %>>% 
+    (. -> netcoup3)
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_fan(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size = degree(netcoup3)), show.legend = F)  
+
+ggsave('img/rede1.png')
+
+## 1990
+netcoup2 %>>% 
+    dplyr::filter(PY < 1990) %>>% 
+    (. -> netcoup3)
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_fan(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size = degree(netcoup3)), show.legend = F)  
+
+ggsave('img/rede2.png')
+
+
+## 1995
+netcoup2 %>>% 
+    dplyr::filter(PY < 1995) %>>% 
+    (. -> netcoup3)
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_fan(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size = degree(netcoup3)), show.legend = F)  
+
+ggsave('img/rede3.png')
+
+## 2000
+netcoup2 %>>% 
+    dplyr::filter(PY < 2000) %>>% 
+    (. -> netcoup3)
+
+ggraph(netcoup3, layout = 'kk') +
+    geom_edge_fan(show.legend = F) +
+    geom_node_point(aes(size = degree(netcoup3)/20), show.legend = F)  
+
+ggsave('img/rede4.png')
+
+# plot(simplify(g), 
+# vertex.size= 0.01,
+# edge.arrow.size=0.001,
+# vertex.label.cex = 0.75,
+# vertex.label.color = "black",
+# vertex.frame.color = adjustcolor("white", alpha.f = 0),
+# vertex.color = adjustcolor("white", alpha.f = 0),
+# edge.color=adjustcolor(1, alpha.f = 0.15),
+# display.isolates=FALSE,
+# vertex.label=ifelse(page_rank(g)$vector > 0.1 , "important nodes", NA))
+
+# }}}
 
 # vim: fdm=marker nowrap

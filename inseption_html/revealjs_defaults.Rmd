@@ -1,0 +1,27 @@
+---
+title: "Conclusões"
+date: Equipe All 4 Food
+output: revealjs::revealjs_presentation
+---
+
+## In the morning
+
+## Getting up
+
+- Turn off alarm
+- Get out of bed
+
+## Breakfast
+
+- Eat eggs
+- Drink coffee
+
+## Dinner
+
+- Eat spaghetti
+- Drink wine
+
+## Going to sleep
+
+- Get in bed
+- Count sheep
