@@ -44,6 +44,7 @@ library(highcharter)
 library(htmlwidgets)
 library(printr)
 library(shiny)
+library(kableExtra)
 ```
 
 
@@ -81,32 +82,10 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
 
 ### Networks
 
-```{r}
 
-knitr::include_graphics('img/rede1_gmp.png')
-
-# selectInput("select_ano", label = "Visualization Year:", choices = c(1985, 1990,1995,2000,2005,2010,2010,2019))
-# 
-# teste <- reactive({
-# 
-#     if(input$select_ano == 1985){
-#         knitr::include_graphics('img/rede1_gmp.png')
-#     } 
-#     if(input$select_ano == 1990){
-#         knitr::include_graphics('img/rede2_gmp.png')
-#     }
-#     else{
-#         knitr::include_graphics('img/rede3')
-#     }
-# })
-# 
-# renderImage({
-#   teste()
-# })
-
-
+```{r,dpi=150}
+knitr::include_url('inseption_html/revealjs_defaults.html', height='90%')
 ```
-
 
 ### Groups Attributes
     
@@ -214,19 +193,78 @@ renderTable(show_mtcars())
 
 # g02 {data-navmenu="Groups"}
 
-### `include_url`
+<h3> Grupo g05 - Embalagens ativas e nanotecnologia </h3>
 
-```{r,dpi=240}
-knitr::include_url('inseption_html/ioslides_default.html')
+Column {data-width=500 .tabset}
+-------------------------------------
+
+### Authors
+
+```{r}
+import('data/indices_g05.rds') %>>% 
+    (kable(.,'html')) %>>% 
+    kable_styling() %>>% 
+    scroll_box(width = "100%", height = "660px")
 ```
 
+<h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
+<h5> G-index is an improvement of the h-index. If this set is ranked in decreasing order of the number of citations that they received, the g-index is the (unique) largest number such that the top g articles received (together) at least g2 citations.   </h5> 
+<h5> M-Index is the H-index divided by the number of years that a scientist has been active. </h5> 
+
+### Authors Production 
+
+
+```{r}
+# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
+# authorProd$graph
+knitr::include_graphics('img/top_authors_g05.png')
+```
+
+### Authors Collaboration 
+
+
+```{r}
+knitr::include_graphics('img/authors_collaboration_g05.png')
+```
+
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+### Countries
+
+`treemap here`
+
+
+### Countries Network
+
+`rede de colaboração entre países`
+
+
+### Papers
+
+
+`principais trabalhos aqui`
 
 # Conclusions
 
-```{r,dpi=240}
-knitr::include_url('inseption_html/revealjs_defaults.html', height='100%')
+Column {data-width=700}
+-------------------------------------
+
+```{r,dpi=250}
+knitr::include_url('inseption_html/revealjs_defaults.html', height='95%')
 ```
 
+Column {data-width=300}
+-------------------------------------
+
+### Informations
+
+<h4> A4F Group </h4>
+
+<h5> Roney Fraga Souza </h5>
+
+<h5> Demais Pesquisadores </h5>
 
 # People  {.hidden}
 

@@ -16,6 +16,7 @@ library(htmlwidgets)
 library(printr)
 library(shiny)
 library(patchwork)
+library(bibliometrix)
 # }}}
 
 ### Growth -------------------- {{{
@@ -279,6 +280,131 @@ ggsave('img/rede4.png')
 # edge.color=adjustcolor(1, alpha.f = 0.15),
 # display.isolates=FALSE,
 # vertex.label=ifelse(page_rank(g)$vector > 0.1 , "important nodes", NA))
+
+# }}}
+
+### Group g05 autores -------------------- {{{
+
+M <- import('data/M.rds')
+M$name <- paste(M$SR, M$PY, sep='. ')
+netcoup <- import('data/netcoup.rds')
+
+netcoup %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    right_join(M) %>>% 
+    dplyr::relocate(name,grupo,qtde.papers,PY.m) %>>% 
+    (. -> M2)
+
+M2 <- metaTagExtraction(M2, Field = "AU_CO", sep = ";")
+
+grupo_analisado <- 'g05'
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (bibliometrix::biblioAnalysis(., sep = ";")) %>>% 
+    (. -> results)
+
+authors <- gsub(","," ",names(results$Authors))[1:200]
+indices <- Hindex(M2, field = "author", elements=authors, sep = ";", years = 50)$H
+
+export(indices,'data/indices_g05.rds')
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (authorProdOverTime(., k = 15, graph = F)) %>>% 
+    (. -> authorProd)
+
+export(authorProd,'data/authorProd_g05.rds')
+
+authorProd$graph
+# ggsave('img/top_authors_g05.png')
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    as.data.frame(.) %>>% 
+    (biblioNetwork(., analysis = "collaboration", network = "authors", sep = ";")) %>>% 
+    (~ . -> NetMatrix) %>>% 
+    networkStat %>>% 
+    (. -> netcoau)
+
+netcoau$network
+
+netcoau$graph %>>%  (. -> net)
+
+V(net)$grau <- degree(net)
+
+net %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    dplyr::filter(grau>18) %>>% 
+    (. -> net2)
+
+ggraph(net2, layout = 'fr') +
+    geom_edge_link() +
+    geom_node_point(aes(size = grau), show.legend = F)  
+# ggsave('img/authors_collaboration_g05.png')
+
+# }}}
+
+### Group g05 countries -------------------- {{{
+
+M2 <- metaTagExtraction(M2, Field = "AU_CO", sep = ";")
+
+M2 %>>% 
+    select(name,grupo,AU_CO) %>>% 
+    dplyr::filter(grupo=='g05') %>>% 
+    separate_rows(AU_CO, sep=';') %>>% 
+    distinct(name,AU_CO, .keep_all=T) %>>% 
+    dplyr::filter(!is.na(grupo)) %>>% 
+    group_by(AU_CO) %>>% 
+    count(sort=T, name='autores') %>>% 
+    ungroup %>>% 
+    slice_head(n=10) %>>% 
+    rmarkdown::paged_table()
+
+png("img/countries_collaboration_g05.png", width = 16, height = 16, units = 'cm', res = 300)
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    as.data.frame() %>>% 
+    (biblioNetwork(., analysis = "collaboration", network = "countries", sep = ";")) %>>% 
+    (networkPlot(., n = 30, Title = "Country Collaboration", type = "kamada", 
+                 size=TRUE, remove.multiple=FALSE,labelsize=0.7,cluster="none", verbose =T)) 
+dev.off()
+
+# ggsave('img/countries_collaboration_g05.png')
+
+
+# ---
+library("treemap")
+library("viridis")
+
+data(GNI2014)
+head(GNI2014)
+
+tm <- treemap(GNI2014,
+  index = c("continent", "iso3"),
+  vSize = "population", vColor = "GNI",
+  type = "comp", palette = rev(viridis(6)),
+  draw = FALSE
+)
+
+hctreemap(tm, allowDrillToNode = TRUE, layoutAlgorithm = "squarified") %>%
+  hc_title(text = "Gross National Income World Data") %>%
+  hc_tooltip(pointFormat = )
+
+#
+install.packages(c('d3treeR'), dependencies=TRUE) 
+
+library(d3treeR)
+data(GNI2014)
+treex2<- treemap(GNI2014,
+        index=c("continent", "iso3"),
+        vSize="population",
+        vColor="GNI",
+        type="value",
+        format.legend = list(scientific = FALSE, big.mark = " "))
+d3tree2(treex2)
 
 # }}}
 

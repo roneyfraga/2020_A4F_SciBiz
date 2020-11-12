@@ -4,7 +4,6 @@ author: "Roney Fraga Souza"
 date: "11/11/2020"
 output: 
   slidy_presentation:
-       
 ---
 
 ```{r setup, include=FALSE}
