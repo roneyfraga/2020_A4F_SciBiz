@@ -83,8 +83,8 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
 ### Networks
 
 
-```{r,dpi=150}
-knitr::include_url('inseption_html/revealjs_defaults.html', height='90%')
+```{r,dpi=120}
+knitr::include_url('inseption_html/revealjs_defaults.html', height='80%')
 ```
 
 ### Groups Attributes

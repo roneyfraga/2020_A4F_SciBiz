@@ -73,16 +73,34 @@ ggraph(netcoup3, layout = 'fr') +
 
 ```{r}
 
-gr <- create_notable('zachary') %>%
-  mutate(group = group_infomap()) %>%
-  morph(to_split, group) %>%
-  activate(edges) %>%
-  mutate(edge_group = as.character(.N()$group[1])) %>%
-  unmorph()
+## 1995
+netcoup2 %>>% 
+    dplyr::filter(PY < 1995) %>>% 
+    (. -> netcoup3)
 
-ggraph(gr, 'matrix', sort.by = node_rank_hclust()) +
-  geom_edge_point(aes(colour = edge_group), mirror = TRUE, edge_size = 3, show.legend=F) +
-  scale_y_reverse() +
-  coord_fixed() 
+V(netcoup3)$group <- cluster_louvain(netcoup3)$membership
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_link(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size=centrality_degree(), color = group), show.legend=F) 
 ```
 
+## 2000
+
+```{r}
+
+## 2000
+netcoup2 %>>% 
+    dplyr::filter(PY < 2000) %>>% 
+    (. -> netcoup3)
+
+V(netcoup3)$group <- cluster_louvain(netcoup3)$membership
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_link(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size=centrality_degree(), color=group), show.legend=F) 
+```
+
+## 
+
+Visualizar grandes redes é um desafio.
