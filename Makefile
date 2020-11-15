@@ -4,7 +4,7 @@ flex:
 	Rscript -e 'library(rmarkdown);rmarkdown::render("$(file).Rmd")'
 
 run:
-	Rscript -e 'library(rmarkdown);rmarkdown::run("$(file).Rmd")'
+	Rscript -e 'library(rmarkdown);rmarkdown::run("$(file).Rmd", shiny_args = list(host = "127.0.0.1", port = 4040, launch.browser= FALSE))'
 
 run_ufmt:
 	Rscript -e 'library(rmarkdown);rmarkdown::run("$(file).Rmd", shiny_args = list(host = "200.17.60.42", port = 19127, launch.browser= FALSE))'

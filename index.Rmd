@@ -1,5 +1,5 @@
 ---
-title: "A4F - Shelf Life"
+title: "A4F - Shelf Life - SciBiz"
 output: 
   flexdashboard::flex_dashboard:
     navbar:
@@ -47,6 +47,7 @@ library(shiny)
 library(kableExtra)
 ```
 
+<!--  ------------------------------------------------------------ -->
 
 # General 
 
@@ -58,11 +59,11 @@ Column {data-width=500 .tabset}
 ### Target
 
 <br> </br>
-<h3>        - Qual área de pesquisa é emergente?  </h3> 
+<h3>        - Which research area is emerging?  </h3> 
 <br> </br>
-<h3>        - Qual pesquisador contratar?  </h3> 
+<h3>        - What researcher to hire?  </h3> 
 <br> </br>
-<h3>        - Qual patente comprar?  </h3> 
+<h3>        - What patent to buy?  </h3> 
 <br> </br>
 
 
@@ -84,7 +85,7 @@ hchart(d2, "column", hcaes(x = Year, y = Publications), name = "Publications", s
 
 
 ```{r,dpi=120}
-knitr::include_url('inseption_html/revealjs_defaults.html', height='80%')
+knitr::include_url('inseption_html/slides_networks.html', height='80%')
 ```
 
 ### Groups Attributes
@@ -92,7 +93,7 @@ knitr::include_url('inseption_html/revealjs_defaults.html', height='80%')
 ```{r}
 import('data/groups_attributes.rds') %>>% 
     datatable(extensions = 'Buttons', rownames=F,
-              options = list(dom = 'Bfrtip', pageLength = 13,
+              options = list(dom = 'Bfrtip', pageLength = 20,
                              buttons = list(list( 
                                                  extend='collection', 
                                                  buttons = list(list(extend='csv',filename='data'),
@@ -110,8 +111,8 @@ Column {data-width=500 .tabset}
 
 <br> </br>
 
-<h3>  - Shelf Life </h3> 
-<h4> O período total de tempo entre a data de fabricação, embalagem, transporte e armazenagem, que ainda permanece utilizável para o consumo pelo usuário final. </h4> 
+<h3> - Shelf Life </h3> 
+<h4> - The length of time a product may be stored without becoming unsuitable for use or consumption. </h4> 
 
 <br> </br>
 
@@ -163,11 +164,11 @@ hchart(groups_growth, "line", hcaes(x = Year, y = Publications, group = Group), 
 
 
 ### Groups Description
-    
+
 ```{r}
 import('data/groups_description.txt') %>>% 
     datatable(extensions = 'Buttons', rownames=F,
-              options = list(dom = 'Bfrtip', pageLength = 13,
+              options = list(dom = 'Bfrtip', pageLength = 20,
                              buttons = list(list( 
                                                  extend='collection', 
                                                  buttons = list(list(extend='csv',filename='data'),
@@ -175,37 +176,41 @@ import('data/groups_description.txt') %>>%
                                                  text='Download'))))
 ```
 
+<!--  ------------------------------------------------------------ -->
 
 # g01 {data-navmenu="Groups"}
     
 ### Aplicação `shiny`
 
-```{r }
-numericInput("obs", label = "Number of carbs:", 2, min=1, max=8)
 
-show_mtcars <- reactive({
-    mtcars %>>% 
-        dplyr::filter(carb == input$obs)
-})
+<!--  ------------------------------------------------------------ -->
 
-renderTable(show_mtcars())
+# g15 {data-navmenu="Groups"}
 
-```
-
-# g02 {data-navmenu="Groups"}
-
-<h3> Grupo g05 - Embalagens ativas e nanotecnologia </h3>
+<h3> Group g15 - Osmotic dehydration of fruits and vegetables </h3>
 
 Column {data-width=500 .tabset}
 -------------------------------------
 
+### Authors Network
+
+
+```{r}
+import('data/authorNet_g15.rds') %>>% (. -> authorNet)
+
+visNetwork(authorNet$nodes, authorNet$edges, height = "750px", width='500px') %>>%
+    visIgraphLayout(layout = "layout_with_kk")  %>>%
+    visOptions(highlightNearest = TRUE)
+```
+
 ### Authors
 
 ```{r}
-import('data/indices_g05.rds') %>>% 
+import('data/indices_g15.rds') %>>% 
+    mutate(m_index=round(m_index,2)) %>>% 
     (kable(.,'html')) %>>% 
     kable_styling() %>>% 
-    scroll_box(width = "100%", height = "660px")
+    scroll_box(width = "100%", height = "460px")
 ```
 
 <h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
@@ -218,42 +223,139 @@ import('data/indices_g05.rds') %>>%
 ```{r}
 # import('data/authorProd_g05.rds') %>>% (. -> authorProd)
 # authorProd$graph
-knitr::include_graphics('img/top_authors_g05.png')
-```
-
-### Authors Collaboration 
-
-
-```{r}
-knitr::include_graphics('img/authors_collaboration_g05.png')
+knitr::include_graphics('img/top_authors_g15.png')
 ```
 
 
 Column {data-width=500 .tabset}
 -------------------------------------
 
-### Countries
 
-`treemap here`
+### Countries Network
+
+```{r}
+
+import('data/countryNet_g15.rds') %>>% (. -> countryNet)
+
+visNetwork(countryNet$nodes, countryNet$edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
+```
+
+### Papers Hubs
+
+```{r}
+
+import('data/netcit_hubs_full_info.xlsx') %>>% 
+    as_tibble %>>% 
+    dplyr::filter(grupo=='g15') %>>% 
+    rename(Group = grupo) %>>% 
+    relocate(AU,.after=Group) %>>% 
+    select(-SR,-Ki,-ki) %>>% 
+    (. -> papersHub)
+
+papersHub %>>% 
+    datatable(rownames=F,
+              options=list(pageLength=8, dom = 'Bfrtip', 
+                            columnDefs = list(list(visible=FALSE, targets=c(6:8))),
+                            buttons = list(list(extend = 'colvis'))
+              )
+    )
+```
+
+
+<!--  ------------------------------------------------------------ -->
+
+# g16 {data-navmenu="Groups"}
+
+<h3> Group g16 - Cold plasma and oxidative stability </h3>
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+### Authors Network
+
+
+```{r}
+import('data/authorNet_g16.rds') %>>% (. -> authorNet)
+
+visNetwork(authorNet$nodes, authorNet$edges, height = "750px", width='500px') %>>%
+    visIgraphLayout(layout = "layout_with_kk")  %>>%
+    visOptions(highlightNearest = TRUE)
+```
+
+### Authors
+
+```{r}
+import('data/indices_g16.rds') %>>% 
+    mutate(m_index=round(m_index,2)) %>>% 
+    (kable(.,'html')) %>>% 
+    kable_styling() %>>% 
+    scroll_box(width = "100%", height = "460px")
+```
+
+<h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
+<h5> G-index is an improvement of the h-index. If this set is ranked in decreasing order of the number of citations that they received, the g-index is the (unique) largest number such that the top g articles received (together) at least g2 citations.   </h5> 
+<h5> M-Index is the H-index divided by the number of years that a scientist has been active. </h5> 
+
+### Authors Production 
+
+
+```{r}
+# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
+# authorProd$graph
+knitr::include_graphics('img/top_authors_g16.png')
+```
+
+
+Column {data-width=500 .tabset}
+-------------------------------------
 
 
 ### Countries Network
 
-`rede de colaboração entre países`
+```{r}
+
+import('data/countryNet_g16.rds') %>>% (. -> countryNet)
+
+visNetwork(countryNet$nodes, countryNet$edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
+```
+
+### Papers Hubs
+
+```{r}
+
+import('data/netcit_hubs_full_info.xlsx') %>>% 
+    as_tibble %>>% 
+    dplyr::filter(grupo=='g16') %>>% 
+    rename(Group = grupo) %>>% 
+    relocate(AU,.after=Group) %>>% 
+    select(-SR,-Ki,-ki) %>>% 
+    (. -> papersHub)
+
+papersHub %>>% 
+    datatable(rownames=F,
+              options=list(pageLength=8, dom = 'Bfrtip', 
+                            columnDefs = list(list(visible=FALSE, targets=c(6:8))),
+                            buttons = list(list(extend = 'colvis'))
+              )
+    )
+```
 
 
-### Papers
-
-
-`principais trabalhos aqui`
+<!--  ------------------------------------------------------------ -->
 
 # Conclusions
 
 Column {data-width=700}
 -------------------------------------
 
-```{r,dpi=250}
-knitr::include_url('inseption_html/revealjs_defaults.html', height='95%')
+###
+
+```{r,dpi=170}
+knitr::include_url('inseption_html/slides_conclusion.html', height='80%')
 ```
 
 Column {data-width=300}
@@ -261,16 +363,22 @@ Column {data-width=300}
 
 ### Informations
 
+<!--
 <h4> A4F Group </h4>
 
 <h5> Roney Fraga Souza </h5>
 
 <h5> Demais Pesquisadores </h5>
+-->
+
+<!--  ------------------------------------------------------------ -->
 
 # People  {.hidden}
 
 Adicionar os grandes números do Lattes. 
 
+
+<!--  ------------------------------------------------------------ -->
 
 # Patent  {.hidden}
 

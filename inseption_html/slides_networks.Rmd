@@ -1,28 +1,32 @@
 ---
-title: "Networks"
-author: "Use arrow keys or space to navigate between networks"
-date: "Use mouse scrool to zoom-in and zoom-out inside networks"
-output: 
-    ioslides_presentation:
-        widescreen: false
-        smaller: true
-        highlight: monochrome
+output:
+  revealjs::revealjs_presentation:
+    center: true
 ---
 
-```{r setup_slide, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-library(rio)
-library(tidyverse)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE) 
+options(scipen=999)
+library(rmarkdown)
+library(flexdashboard)
 library(pipeR)
+library(tidyverse)
+library(rio)
+library(ggraph)
 library(tidygraph)
+library(DT)
 library(visNetwork)
 library(igraph)
+library(highcharter)
+library(htmlwidgets)
+library(printr)
+library(shiny)
+library(kableExtra)
 ```
 
-##
+## 1985
 
-```{r echo=F, warning=F, message=F}
-
+```{r, echo=F, }
 netcoup <- import('../data/netcoup.rds') 
 hubs <- import('../data/netcoup_hubs.rds') 
 
@@ -33,91 +37,72 @@ hubs %>>%
 netcoup %>>% 
     activate(nodes) %>>% 
     left_join(hubs2) %>>% 
-    (. -> netcoup)
-
-netcoup %>>% 
-    as_tbl_graph() %>>% 
-    activate(nodes) %>>% 
-    mutate(label=name) %>>% 
-    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
+    mutate(label_short=name) %>>% 
+    mutate(label_short=paste( gsub(' .*$','',label_short), gsub('.*\\.','',label_short), sep='' )) %>>% 
     dplyr::filter(!is.na(grupo)) %>>% 
-    dplyr::filter(PY <= 1985) %>>% 
     (. -> netcoup2)
 
-tibble(id=1:length(V(netcoup2)),
-       label= V(netcoup2)$label,
-       group=V(netcoup2)$grupo,
-       year=V(netcoup2)$PY
-       ) %>>% 
-(. -> nodes)
+## 1985
+netcoup2 %>>% 
+    dplyr::filter(PY < 1985) %>>% 
+    (. -> netcoup3)
 
-tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
-       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
-       ) %>>% 
-(. -> edges)
+V(netcoup3)$group <- cluster_louvain(netcoup3)$membership
 
-visNetwork(nodes, edges, height = "700px", width = "700px", main = as.character(max(V(netcoup2)$PY))) %>%
-    visNodes(size = 10) %>>% 
-    visEdges(width = 2, hidden=F)  %>>% 
-    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
-    visPhysics(stabilization = T) %>>% 
-    visGroups(groupname = "g01", color = "#38501e") %>>% 
-    visGroups(groupname = "g02", color = "#23331e") %>>% 
-    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
-    visGroups(groupname = "g04", color = "#472926") %>>% 
-    visGroups(groupname = "g05", color = "#926433") %>>% 
-    visGroups(groupname = "g06", color = "#a90a26") %>>% 
-    visGroups(groupname = "g07", color = "#97863e") %>>% 
-    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
-    visGroups(groupname = "g09", color = "#d48d01") %>>% 
-    visGroups(groupname = "g10", color = "#021338") %>>% 
-    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
-    visGroups(groupname = "g12", color = "#9eb739") %>>% 
-    visGroups(groupname = "g13", color = "#808080") 
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_link(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size=centrality_degree(), color = group), show.legend=F) + 
+    geom_node_text(aes(label = label_short), repel=TRUE)
 ```
 
-##
+## 1990
 
-```{r echo=F, warning=F, message=F}
+```{r, echo=F, }
 
-netcoup %>>% 
-    as_tbl_graph() %>>% 
-    activate(nodes) %>>% 
-    mutate(label=name) %>>% 
-    mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    dplyr::filter(PY <= 1990) %>>% 
-    (. -> netcoup2)
+## 1990
+netcoup2 %>>% 
+    dplyr::filter(PY < 1990) %>>% 
+    (. -> netcoup3)
 
-tibble(id=1:length(V(netcoup2)),
-       label= V(netcoup2)$label,
-       group=V(netcoup2)$grupo,
-       year=V(netcoup2)$PY
-       ) %>>% 
-(. -> nodes)
+V(netcoup3)$group <- cluster_louvain(netcoup3)$membership
 
-tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
-       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
-       ) %>>% 
-(. -> edges)
-
-visNetwork(nodes, edges, height = "700px", width = "700px", main = as.character(max(V(netcoup2)$PY))) %>%
-    visNodes(size = 10) %>>% 
-    visEdges(width = 2, hidden=F)  %>>% 
-    visOptions(selectedBy = "group", highlightNearest = TRUE, nodesIdSelection = F) %>>%  
-    visPhysics(stabilization = T) %>>% 
-    visGroups(groupname = "g01", color = "#38501e") %>>% 
-    visGroups(groupname = "g02", color = "#23331e") %>>% 
-    visGroups(groupname = "g03", color = "#6e1d21") %>>% 
-    visGroups(groupname = "g04", color = "#472926") %>>% 
-    visGroups(groupname = "g05", color = "#926433") %>>% 
-    visGroups(groupname = "g06", color = "#a90a26") %>>% 
-    visGroups(groupname = "g07", color = "#97863e") %>>% 
-    visGroups(groupname = "g08", color = "#00FFFF") %>>% 
-    visGroups(groupname = "g09", color = "#d48d01") %>>% 
-    visGroups(groupname = "g10", color = "#021338") %>>% 
-    visGroups(groupname = "g11", color = "#e6d82e") %>>% 
-    visGroups(groupname = "g12", color = "#9eb739") %>>% 
-    visGroups(groupname = "g13", color = "#808080") 
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_link(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size=centrality_degree(), color = group), show.legend=F) 
 ```
 
+## 1995
+
+```{r}
+
+## 1995
+netcoup2 %>>% 
+    dplyr::filter(PY < 1995) %>>% 
+    (. -> netcoup3)
+
+V(netcoup3)$group <- cluster_louvain(netcoup3)$membership
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_link(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size=centrality_degree(), color = group), show.legend=F) 
+```
+
+## 2000
+
+```{r}
+
+## 2000
+netcoup2 %>>% 
+    dplyr::filter(PY < 2000) %>>% 
+    (. -> netcoup3)
+
+V(netcoup3)$group <- cluster_louvain(netcoup3)$membership
+
+ggraph(netcoup3, layout = 'fr') +
+    geom_edge_link(aes(alpha = stat(index)), show.legend = F) +
+    geom_node_point(aes(size=centrality_degree(), color=group), show.legend=F) 
+```
+
+## 
+
+Connections complexity.

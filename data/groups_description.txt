@@ -1,14 +1,21 @@
 Group;Description
-g01;Irradiação, microbiologia e perdas em alimentos 
-g02;Óleos essenciais, atividade antimicrobiana, embalagem a vácuo e microbiologia preditiva
-g03;Processos de irradiação
-g04;Oxidação lipídica e encapsulação
-g05;Embalagens ativas e nanotecnologia
-g06;Pós-colheita e armazenamento de produtos de origem vegetal
-g07;Irradiação em panificação
-g08;Processos envolvendo conservação por alta pressão
-g09;Conservação de vegetais e problemas causados pelo frio
-g10;Fenômenos de transporte de massa
-g11;Microbiologia em panificação
-g12;Leite e derivados
-g13;Panificação e amido
+g01;Grupo de conhecimento geral.
+g02;Grupo de comparação entre técnicas.
+g03;Active food packaging technologies (chitosan, nanotechnology, essential oils, edible film).
+g04;Edible coatings (postharvest, edible film, alginate, respiration).
+g05;Quality and shelf life of meats (lipid oxidation, antioxidant).
+g06;Microbial shelf life in bakery products (lactic acid bacteria, sourdough, biopreservation, rheology, exopolysaccharides).
+g07;Predictive methods (predictive microbiology, modeling).
+g08;Sensory shelf life analysis.
+g09;Food irradiation (mushrooms, electron beam).
+g10;Probiotics and biopreservation.
+g11;Listeria monocytogenes studies.
+g12;Studies fluid milk processing systems (microfiltration, pasteurization, proteolysis).
+g13;Storage stability. 
+g14;Essential oils as food preservatives based on antifungal, antiaflatoxin, antioxidant activities.
+g15;Osmotic dehydration of fruits and vegetables (storage, controlled atmosphere).
+g16;Cold plasma and oxidative stability.
+g17;To be defined.
+g18;Cheese studies.
+g19;Egg quality.
+g20;Oxidation studies.

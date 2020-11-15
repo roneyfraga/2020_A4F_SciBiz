@@ -1,0 +1,34 @@
+---
+output:
+  revealjs::revealjs_presentation:
+    center: true
+---
+
+
+## Getting up
+
+> - Turn off alarm
+> - Get out of bed
+
+## Breakfast
+
+- Eat eggs
+- Drink coffee
+
+## Dinner
+
+- Eat spaghetti
+- Drink wine
+
+## Going to sleep
+
+- Get in bed
+- Count sheep
+
+## CSS color background {data-background=#ff0000}
+
+## Full size image background {data-background="background.jpeg"}
+
+## Video background {data-background-video="background.mp4"}
+
+## Embed a web page as a background {data-background-iframe="https://example.com"}

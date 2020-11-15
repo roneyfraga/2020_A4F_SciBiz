@@ -56,10 +56,10 @@ d %>>%
 
 ### Groups Attributes -------------------- {{{
 
-netcoup <- import('data/netcoup.rds')
-a <- import('data/netcoup_grupos.rds')
+netcit <- import('data/netcit.rds')
+a <- import('data/netcit_grupos.rds')
 
-netcoup %>>% 
+netcit %>>% 
     activate(nodes) %>>% 
     as_tibble %>>% 
     dplyr::filter(!is.na(grupo)) %>>% 
@@ -93,7 +93,7 @@ for(i in seq_along(grupos)){
     beta1 <- m1$coefficients[[2]]
     
     # modelo não linear
-    m2 <- nls(publications ~ b0*exp(b1*(PY-2010)), start = list(b0=beta0, b1=beta1), data=d)
+    m2 <- nls(publications ~ b0*exp(b1*(PY-2000)), start = list(b0=beta0, b1=beta1), data=d)
     res[[i]] <- coef(m2)[2]
 
 }
@@ -104,16 +104,13 @@ data.frame(Groups=grupos,Coef=res) %>>%
     as_tibble %>>% 
     mutate(GrowthRateYear=(exp(Coef)-1)*100) %>>% 
     dplyr::select(-Coef) %>>% 
-    left_join(import('data/netcoup_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
+    left_join(import('data/netcit_grupos.rds') %>>% select(nname,qtde.papers,PY.m) %>>% rename(Groups = nname)) %>>% 
     dplyr::arrange(Groups) %>>% 
     (. -> grupoAnoCrescimento) %>>%     
     dplyr::rename(AverageAge = PY.m) %>>% 
     dplyr::rename(TotalPapers = qtde.papers) %>>% 
     mutate(AverageAge = round(AverageAge,1)) %>>% 
-    left_join(import('data/ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
-    mutate(Description='Adicionar a descrição do grupo. Manter um texto o mais explicativo possível.') %>>% 
-    relocate(Description, .after=Groups) %>>% 
-    select(-Description) %>>% 
+    left_join(import('data/netcit_ZiPi.rds') %>>% mutate(Groups=grupo) %>>% select(Groups,Hubs)) %>>% 
     rename(Group = Groups) %>>% 
     (export(.,'data/groups_attributes.rds'))
 # }}}
@@ -148,39 +145,39 @@ d %>>%
 
 ### Networks -------------------- {{{
 
-netcoup <- import('data/netcoup.rds') 
-hubs <- import('data/netcoup_hubs.rds') 
+netcit <- import('data/netcit.rds') 
+hubs <- import('data/netcit_hubs.rds') 
 
 hubs %>>% 
     select(SR,Ki) %>>% 
     (. -> hubs2)
 
-netcoup %>>% 
+netcit %>>% 
     activate(nodes) %>>% 
     left_join(hubs2) %>>% 
-    (. -> netcoup)
+    (. -> netcit)
 
 # ALTERAR AQUI
 ano <- 1990 
 
-netcoup %>>% 
+netcit %>>% 
     as_tbl_graph() %>>% 
     activate(nodes) %>>% 
     mutate(label=name) %>>% 
     mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
     dplyr::filter(!is.na(grupo)) %>>% 
     dplyr::filter(PY <= ano) %>>%  
-    (. -> netcoup2)
+    (. -> netcit2)
 
-tibble(id=1:length(V(netcoup2)),
-       label= V(netcoup2)$label,
-       group=V(netcoup2)$grupo,
-       year=V(netcoup2)$PY
+tibble(id=1:length(V(netcit2)),
+       label= V(netcit2)$label,
+       group=V(netcit2)$grupo,
+       year=V(netcit2)$PY
        ) %>>% 
 (. -> nodes)
 
-tibble(from = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
-       to = netcoup2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
+tibble(from = netcit2 %>>% activate(edges) %>>% as_tibble %>>%  pull(from),
+       to = netcit2 %>>% activate(edges) %>>% as_tibble %>>%  pull(to)
        ) %>>% 
 (. -> edges)
 
@@ -191,10 +188,10 @@ list(nodes=nodes,edges=edges) %>>%
 
 ### Groups Growth -------------------- {{{
 
-netcoup <- import('data/netcoup.rds')
-a <- import('data/netcoup_grupos.rds')
+netcit <- import('data/netcit.rds')
+a <- import('data/netcit_grupos.rds')
 
-netcoup %>>% 
+netcit %>>% 
     activate(nodes) %>>% 
     as_tibble %>>% 
     dplyr::filter(!is.na(grupo)) %>>% 
@@ -210,63 +207,63 @@ netcoup %>>%
 
 ### Network -------------------- {{{
 
-netcoup <- import('data/netcoup.rds') 
-hubs <- import('data/netcoup_hubs.rds') 
+netcit <- import('data/netcit.rds') 
+hubs <- import('data/netcit_hubs.rds') 
 
 hubs %>>% 
     select(SR,Ki) %>>% 
     (. -> hubs2)
 
-netcoup %>>% 
+netcit %>>% 
     activate(nodes) %>>% 
     left_join(hubs2) %>>% 
     mutate(label=name) %>>% 
     mutate(label=paste( gsub(' .*$','',label), gsub('.*\\.','',label), sep='' )) %>>% 
     dplyr::filter(!is.na(grupo)) %>>% 
-    (. -> netcoup2)
+    (. -> netcit2)
 
 ## 1985
-netcoup2 %>>% 
+netcit2 %>>% 
     dplyr::filter(PY < 1985) %>>% 
-    (. -> netcoup3)
+    (. -> netcit3)
 
-ggraph(netcoup3, layout = 'fr') +
+ggraph(netcit3, layout = 'fr') +
     geom_edge_fan(aes(alpha = stat(index)), show.legend = F) +
-    geom_node_point(aes(size = degree(netcoup3)), show.legend = F)  
+    geom_node_point(aes(size = degree(netcit3)), show.legend = F)  
 
 ggsave('img/rede1.png')
 
 ## 1990
-netcoup2 %>>% 
+netcit2 %>>% 
     dplyr::filter(PY < 1990) %>>% 
-    (. -> netcoup3)
+    (. -> netcit3)
 
-ggraph(netcoup3, layout = 'fr') +
+ggraph(netcit3, layout = 'fr') +
     geom_edge_fan(aes(alpha = stat(index)), show.legend = F) +
-    geom_node_point(aes(size = degree(netcoup3)), show.legend = F)  
+    geom_node_point(aes(size = degree(netcit3)), show.legend = F)  
 
 ggsave('img/rede2.png')
 
 
 ## 1995
-netcoup2 %>>% 
+netcit2 %>>% 
     dplyr::filter(PY < 1995) %>>% 
-    (. -> netcoup3)
+    (. -> netcit3)
 
-ggraph(netcoup3, layout = 'fr') +
+ggraph(netcit3, layout = 'fr') +
     geom_edge_fan(aes(alpha = stat(index)), show.legend = F) +
-    geom_node_point(aes(size = degree(netcoup3)), show.legend = F)  
+    geom_node_point(aes(size = degree(netcit3)), show.legend = F)  
 
 ggsave('img/rede3.png')
 
 ## 2000
-netcoup2 %>>% 
+netcit2 %>>% 
     dplyr::filter(PY < 2000) %>>% 
-    (. -> netcoup3)
+    (. -> netcit3)
 
-ggraph(netcoup3, layout = 'kk') +
+ggraph(netcit3, layout = 'kk') +
     geom_edge_fan(show.legend = F) +
-    geom_node_point(aes(size = degree(netcoup3)/20), show.legend = F)  
+    geom_node_point(aes(size = degree(netcit3)/20), show.legend = F)  
 
 ggsave('img/rede4.png')
 
@@ -283,22 +280,20 @@ ggsave('img/rede4.png')
 
 # }}}
 
-### Group g05 autores -------------------- {{{
+### Group g16 autores -------------------- {{{
 
 M <- import('data/M.rds')
-M$name <- paste(M$SR, M$PY, sep='. ')
-netcoup <- import('data/netcoup.rds')
+netcit <- import('data/netcit.rds')
 
-netcoup %>>% 
+netcit %>>% 
     activate(nodes) %>>% 
     as_tibble %>>% 
     right_join(M) %>>% 
     dplyr::relocate(name,grupo,qtde.papers,PY.m) %>>% 
+    (metaTagExtraction(., Field = "AU_CO", sep = ";")) %>>% 
     (. -> M2)
 
-M2 <- metaTagExtraction(M2, Field = "AU_CO", sep = ";")
-
-grupo_analisado <- 'g05'
+grupo_analisado <- 'g16'
 
 M2 %>>% 
     dplyr::filter(grupo==grupo_analisado) %>>% 
@@ -308,18 +303,22 @@ M2 %>>%
 authors <- gsub(","," ",names(results$Authors))[1:200]
 indices <- Hindex(M2, field = "author", elements=authors, sep = ";", years = 50)$H
 
-export(indices,'data/indices_g05.rds')
+export(indices, paste0('data/indices_',grupo_analisado,'.rds'))
 
 M2 %>>% 
     dplyr::filter(grupo==grupo_analisado) %>>% 
-    (authorProdOverTime(., k = 15, graph = F)) %>>% 
+    (authorProdOverTime(., k = 75, graph = F)) %>>% 
     (. -> authorProd)
 
-export(authorProd,'data/authorProd_g05.rds')
+export(authorProd, paste0('data/authorProd_',grupo_analisado,'.rds'))
 
-authorProd$graph
-# ggsave('img/top_authors_g05.png')
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (authorProdOverTime(., k = 20, graph = T))  
+ggsave(paste0('img/top_authors_',grupo_analisado,'.png'))
 
+#----
+# rede de coautoria
 M2 %>>% 
     dplyr::filter(grupo==grupo_analisado) %>>% 
     as.data.frame(.) %>>% 
@@ -328,72 +327,236 @@ M2 %>>%
     networkStat %>>% 
     (. -> netcoau)
 
-netcoau$network
-
 netcoau$graph %>>%  (. -> net)
 
-V(net)$grau <- degree(net)
+authorProd$dfAU %>>% 
+    tibble %>>% 
+    group_by(Author) %>>% 
+    summarise(Papers=sum(freq), TC=sum(TC), TCpY=mean(TCpY), firstPaper=min(year)) %>>% 
+    ungroup  %>>% 
+    arrange(desc(TCpY)) %>>% 
+    rename(name = Author ) %>>% 
+    (. -> a)
 
 net %>>% 
     as_tbl_graph() %>>% 
     activate(nodes) %>>% 
-    dplyr::filter(grau>18) %>>% 
+    left_join(a) %>>% 
+    dplyr::filter(!is.na(TC)) %>>% 
+    mutate(label=name) %>>% 
+    mutate(title=paste(name,paste0('TC = ',TC), paste0('TCpY = ', round(TCpY),2), sep='; ')) %>>% 
     (. -> net2)
 
-ggraph(net2, layout = 'fr') +
-    geom_edge_link() +
-    geom_node_point(aes(size = grau), show.legend = F)  
-# ggsave('img/authors_collaboration_g05.png')
+wc <- cluster_louvain(net2)
+V(net2)$comm <- membership(wc)
+V(net2)$color <- colorize(membership(wc))
+V(net2)$label.color <- colorize(membership(wc))
+V(net2)$size <- V(net2)$TC/5
+
+nodes <- as_data_frame(net2, what='vertices') %>>% as_tibble
+edges <- as_data_frame(net2, what='edges') %>>% as_tibble
+
+export(list(nodes=nodes,edges=edges), paste0('data/authorNet_',grupo_analisado,'.rds'))
+
+visNetwork(nodes, edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_kk")  %>>% 
+    visOptions(highlightNearest = TRUE)
+
+#----
+## gggraph
+# utilizado para pre-visualizar a rede de coautoria
+# ggraph(net2, layout = 'fr') +
+#     geom_edge_link() +
+#     geom_node_point(aes(size = grau), show.legend = F)  
+#
+# ggsave(paste0('img/authors_collaboration_',grupo_analisado,'.png'))
+
+
+#----
+# colaboracao entre paises
+
+NetMatrix <- biblioNetwork(as.data.frame(M2[M2$grupo==grupo_analisado,]), analysis = "collaboration", network = "countries", sep = ";")
+
+# Plot the network
+net=networkPlot(NetMatrix, 
+                n = 30, 
+                Title = "Country Collaboration", 
+                type = "circle", 
+                size=TRUE, 
+                remove.multiple=FALSE,
+                labelsize=0.7,
+                cluster="none",
+                verbose = F)
+
+
+net2 <- net$graph
+
+wc <- cluster_louvain(net2)
+V(net2)$comm <- membership(wc)
+V(net2)$color <- colorize(membership(wc))
+V(net2)$label.color <- colorize(membership(wc))
+V(net2)$size <- V(net2)$deg*0.6
+
+as_data_frame(net2, what='vertices') %>>% 
+    as_tibble %>>% 
+    mutate(id=name) %>>% 
+    select(id,deg,size,color,comm,label) %>>% 
+    mutate(title=id) %>>% 
+    (. -> nodes)
+
+as_data_frame(net2, what='edges') %>>% 
+    as_tibble %>>% 
+    select(from,to,num,width) %>>% 
+    group_by(from,to) %>>% 
+    summarise(width=sum(width)) %>>% 
+    (. -> edges)
+
+export(list(nodes=nodes,edges=edges), paste0('data/countryNet_',grupo_analisado,'.rds'))
+
+visNetwork(nodes, edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
 
 # }}}
 
-### Group g05 countries -------------------- {{{
+### Group g15 autores -------------------- {{{
 
-M2 <- metaTagExtraction(M2, Field = "AU_CO", sep = ";")
+M <- import('data/M.rds')
+netcit <- import('data/netcit.rds')
 
-M2 %>>% 
-    select(name,grupo,AU_CO) %>>% 
-    dplyr::filter(grupo=='g05') %>>% 
-    separate_rows(AU_CO, sep=';') %>>% 
-    distinct(name,AU_CO, .keep_all=T) %>>% 
-    dplyr::filter(!is.na(grupo)) %>>% 
-    group_by(AU_CO) %>>% 
-    count(sort=T, name='autores') %>>% 
-    ungroup %>>% 
-    slice_head(n=10) %>>% 
-    rmarkdown::paged_table()
+netcit %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    right_join(M) %>>% 
+    dplyr::relocate(name,grupo,qtde.papers,PY.m) %>>% 
+    (metaTagExtraction(., Field = "AU_CO", sep = ";")) %>>% 
+    (. -> M2)
 
-png("img/countries_collaboration_g05.png", width = 16, height = 16, units = 'cm', res = 300)
+grupo_analisado <- 'g15'
+
 M2 %>>% 
     dplyr::filter(grupo==grupo_analisado) %>>% 
-    as.data.frame() %>>% 
-    (biblioNetwork(., analysis = "collaboration", network = "countries", sep = ";")) %>>% 
-    (networkPlot(., n = 30, Title = "Country Collaboration", type = "kamada", 
-                 size=TRUE, remove.multiple=FALSE,labelsize=0.7,cluster="none", verbose =T)) 
-dev.off()
+    (bibliometrix::biblioAnalysis(., sep = ";")) %>>% 
+    (. -> results)
 
-# ggsave('img/countries_collaboration_g05.png')
+authors <- gsub(","," ",names(results$Authors))[1:200]
+indices <- Hindex(M2, field = "author", elements=authors, sep = ";", years = 50)$H
+
+export(indices, paste0('data/indices_',grupo_analisado,'.rds'))
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (authorProdOverTime(., k = 66, graph = F)) %>>% 
+    (. -> authorProd)
+
+export(authorProd, paste0('data/authorProd_',grupo_analisado,'.rds'))
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (authorProdOverTime(., k = 20, graph = T))  
+ggsave(paste0('img/top_authors_',grupo_analisado,'.png'))
+
+#----
+# rede de coautoria
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    as.data.frame(.) %>>% 
+    (biblioNetwork(., analysis = "collaboration", network = "authors", sep = ";")) %>>% 
+    (~ . -> NetMatrix) %>>% 
+    networkStat %>>% 
+    (. -> netcoau)
+
+netcoau$graph %>>%  (. -> net)
+
+authorProd$dfAU %>>% 
+    tibble %>>% 
+    group_by(Author) %>>% 
+    summarise(Papers=sum(freq), TC=sum(TC), TCpY=mean(TCpY), firstPaper=min(year)) %>>% 
+    ungroup  %>>% 
+    arrange(desc(TCpY)) %>>% 
+    rename(name = Author ) %>>% 
+    (. -> a)
+
+net %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    left_join(a) %>>% 
+    dplyr::filter(!is.na(TC)) %>>% 
+    mutate(label=name) %>>% 
+    mutate(title=paste(name,paste0('TC = ',TC), paste0('TCpY = ', round(TCpY),2), sep='; ')) %>>% 
+    (. -> net2)
+
+wc <- cluster_louvain(net2)
+V(net2)$comm <- membership(wc)
+V(net2)$color <- colorize(membership(wc))
+V(net2)$label.color <- colorize(membership(wc))
+V(net2)$size <- V(net2)$TC/5
+
+nodes <- as_data_frame(net2, what='vertices') %>>% as_tibble
+edges <- as_data_frame(net2, what='edges') %>>% as_tibble
+
+export(list(nodes=nodes,edges=edges), paste0('data/authorNet_',grupo_analisado,'.rds'))
+
+visNetwork(nodes, edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_kk")  %>>% 
+    visOptions(highlightNearest = TRUE)
+
+#----
+## gggraph
+# utilizado para pre-visualizar a rede de coautoria
+# ggraph(net2, layout = 'fr') +
+#     geom_edge_link() +
+#     geom_node_point(aes(size = grau), show.legend = F)  
+#
+# ggsave(paste0('img/authors_collaboration_',grupo_analisado,'.png'))
 
 
-# ---
-library("treemap")
-library("viridis")
+#----
+# colaboracao entre paises
 
-data(GNI2014)
-head(GNI2014)
+NetMatrix <- biblioNetwork(as.data.frame(M2[M2$grupo==grupo_analisado,]), analysis = "collaboration", network = "countries", sep = ";")
 
-tm <- treemap(GNI2014,
-  index = c("continent", "iso3"),
-  vSize = "population", vColor = "GNI",
-  type = "comp", palette = rev(viridis(6)),
-  draw = FALSE
-)
+# Plot the network
+net=networkPlot(NetMatrix, 
+                n = 30, 
+                Title = "Country Collaboration", 
+                type = "circle", 
+                size=TRUE, 
+                remove.multiple=FALSE,
+                labelsize=0.7,
+                cluster="none",
+                verbose = F)
 
-hctreemap(tm, allowDrillToNode = TRUE, layoutAlgorithm = "squarified") %>%
-  hc_title(text = "Gross National Income World Data") %>%
-  hc_tooltip(pointFormat = )
 
+net2 <- net$graph
+
+wc <- cluster_louvain(net2)
+V(net2)$comm <- membership(wc)
+V(net2)$color <- colorize(membership(wc))
+V(net2)$label.color <- colorize(membership(wc))
+V(net2)$size <- V(net2)$deg
+
+as_data_frame(net2, what='vertices') %>>% 
+    as_tibble %>>% 
+    mutate(id=name) %>>% 
+    select(id,deg,size,color,comm,label) %>>% 
+    mutate(title=id) %>>% 
+    (. -> nodes)
+
+as_data_frame(net2, what='edges') %>>% 
+    as_tibble %>>% 
+    select(from,to,num,width) %>>% 
+    group_by(from,to) %>>% 
+    summarise(width=sum(width)) %>>% 
+    (. -> edges)
+
+export(list(nodes=nodes,edges=edges), paste0('data/countryNet_',grupo_analisado,'.rds'))
+
+visNetwork(nodes, edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
 
 # }}}
 
-# vim: fdm=marker nowrap
+
+# vim: fdm=marker nowrap nospell
