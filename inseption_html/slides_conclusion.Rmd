@@ -5,30 +5,10 @@ output:
 ---
 
 
-## Getting up
+## developing...
 
-> - Turn off alarm
-> - Get out of bed
+## 
 
-## Breakfast
+![](../img/mesa_trabalho.jpg)
 
-- Eat eggs
-- Drink coffee
 
-## Dinner
-
-- Eat spaghetti
-- Drink wine
-
-## Going to sleep
-
-- Get in bed
-- Count sheep
-
-## CSS color background {data-background=#ff0000}
-
-## Full size image background {data-background="background.jpeg"}
-
-## Video background {data-background-video="background.mp4"}
-
-## Embed a web page as a background {data-background-iframe="https://example.com"}

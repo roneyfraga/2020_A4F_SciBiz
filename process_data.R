@@ -629,7 +629,7 @@ wc <- cluster_louvain(net2)
 V(net2)$comm <- membership(wc)
 V(net2)$color <- colorize(membership(wc))
 V(net2)$label.color <- colorize(membership(wc))
-V(net2)$size <- V(net2)$TC/5
+V(net2)$size <- V(net2)$TC/15
 
 nodes <- as_data_frame(net2, what='vertices') %>>% as_tibble
 edges <- as_data_frame(net2, what='edges') %>>% as_tibble
@@ -673,7 +673,146 @@ wc <- cluster_louvain(net2)
 V(net2)$comm <- membership(wc)
 V(net2)$color <- colorize(membership(wc))
 V(net2)$label.color <- colorize(membership(wc))
-V(net2)$size <- V(net2)$deg
+V(net2)$size <- V(net2)$deg/10
+
+as_data_frame(net2, what='vertices') %>>% 
+    as_tibble %>>% 
+    mutate(id=name) %>>% 
+    select(id,deg,size,color,comm,label) %>>% 
+    mutate(title=id) %>>% 
+    (. -> nodes)
+
+as_data_frame(net2, what='edges') %>>% 
+    as_tibble %>>% 
+    select(from,to,num,width) %>>% 
+    group_by(from,to) %>>% 
+    summarise(width=sum(width)) %>>% 
+    (. -> edges)
+
+export(list(nodes=nodes,edges=edges), paste0('data/countryNet_',grupo_analisado,'.rds'))
+
+visNetwork(nodes, edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
+
+# }}}
+
+### Group g09 autores -------------------- {{{
+
+M <- import('data/M.rds')
+netcit <- import('data/netcit.rds')
+
+netcit %>>% 
+    activate(nodes) %>>% 
+    as_tibble %>>% 
+    right_join(M) %>>% 
+    dplyr::relocate(name,grupo,qtde.papers,PY.m) %>>% 
+    (metaTagExtraction(., Field = "AU_CO", sep = ";")) %>>% 
+    (. -> M2)
+
+grupo_analisado <- 'g09'
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (bibliometrix::biblioAnalysis(., sep = ";")) %>>% 
+    (. -> results)
+
+authors <- gsub(","," ",names(results$Authors))[1:200]
+indices <- Hindex(M2, field = "author", elements=authors, sep = ";", years = 50)$H
+
+export(indices, paste0('data/indices_',grupo_analisado,'.rds'))
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (authorProdOverTime(., k = 100, graph = F)) %>>% 
+    (. -> authorProd)
+
+export(authorProd, paste0('data/authorProd_',grupo_analisado,'.rds'))
+
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    (authorProdOverTime(., k = 20, graph = T))  
+ggsave(paste0('img/top_authors_',grupo_analisado,'.png'))
+
+#----
+# rede de coautoria
+M2 %>>% 
+    dplyr::filter(grupo==grupo_analisado) %>>% 
+    as.data.frame(.) %>>% 
+    (biblioNetwork(., analysis = "collaboration", network = "authors", sep = ";")) %>>% 
+    (~ . -> NetMatrix) %>>% 
+    networkStat %>>% 
+    (. -> netcoau)
+
+netcoau$graph %>>%  (. -> net)
+
+authorProd$dfAU %>>% 
+    tibble %>>% 
+    group_by(Author) %>>% 
+    summarise(Papers=sum(freq), TC=sum(TC), TCpY=mean(TCpY), firstPaper=min(year)) %>>% 
+    ungroup  %>>% 
+    arrange(desc(TCpY)) %>>% 
+    rename(name = Author ) %>>% 
+    (. -> a)
+
+net %>>% 
+    as_tbl_graph() %>>% 
+    activate(nodes) %>>% 
+    left_join(a) %>>% 
+    dplyr::filter(!is.na(TC)) %>>% 
+    mutate(label=name) %>>% 
+    mutate(title=paste(name,paste0('TC = ',TC), paste0('TCpY = ', round(TCpY),2), sep='; ')) %>>% 
+    (. -> net2)
+
+wc <- cluster_louvain(net2)
+V(net2)$comm <- membership(wc)
+V(net2)$color <- colorize(membership(wc))
+V(net2)$label.color <- colorize(membership(wc))
+V(net2)$size <- V(net2)$TC/4
+
+nodes <- as_data_frame(net2, what='vertices') %>>% as_tibble
+edges <- as_data_frame(net2, what='edges') %>>% as_tibble
+
+export(list(nodes=nodes,edges=edges), paste0('data/authorNet_',grupo_analisado,'.rds'))
+
+visNetwork(nodes, edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_kk")  %>>% 
+    visOptions(highlightNearest = TRUE)
+
+#----
+## gggraph
+# utilizado para pre-visualizar a rede de coautoria
+# ggraph(net2, layout = 'fr') +
+#     geom_edge_link() +
+#     geom_node_point(aes(size = grau), show.legend = F)  
+#
+# ggsave(paste0('img/authors_collaboration_',grupo_analisado,'.png'))
+
+
+#----
+# colaboracao entre paises
+
+NetMatrix <- biblioNetwork(as.data.frame(M2[M2$grupo==grupo_analisado,]), analysis = "collaboration", network = "countries", sep = ";")
+
+# Plot the network
+net=networkPlot(NetMatrix, 
+                n = 30, 
+                Title = "Country Collaboration", 
+                type = "circle", 
+                size=TRUE, 
+                remove.multiple=FALSE,
+                labelsize=0.7,
+                cluster="none",
+                verbose = F)
+
+
+net2 <- net$graph
+
+wc <- cluster_louvain(net2)
+V(net2)$comm <- membership(wc)
+V(net2)$color <- colorize(membership(wc))
+V(net2)$label.color <- colorize(membership(wc))
+V(net2)$size <- V(net2)$deg/4
 
 as_data_frame(net2, what='vertices') %>>% 
     as_tibble %>>% 

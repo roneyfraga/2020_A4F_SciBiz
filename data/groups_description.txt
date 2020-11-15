@@ -1,6 +1,6 @@
 Group;Description
-g01;Grupo de conhecimento geral.
-g02;Grupo de comparação entre técnicas.
+g01;General purpose knowlodge.
+g02;Comparison between methods and techniques.
 g03;Active food packaging technologies (chitosan, nanotechnology, essential oils, edible film).
 g04;Edible coatings (postharvest, edible film, alginate, respiration).
 g05;Quality and shelf life of meats (lipid oxidation, antioxidant).

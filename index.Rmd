@@ -3,12 +3,11 @@ title: "A4F - Shelf Life - SciBiz"
 output: 
   flexdashboard::flex_dashboard:
     navbar:
-      - { title: "<b>Research</b>", href: "http://roneyfraga.com/dash/2020_A4F", align: right }
-      - { title: "People", href: "http://roneyfraga.com/dash/2020_A4F/#people", align: right }
-      - { title: "Patent", href: "http://roneyfraga.com/dash/2020_A4F/#patent", align: right }
+      - { title: "<b>Research</b>", href: "http://roneyfraga.com/dash/2020_A4F_SciBiz", align: right }
+      - { title: "People", href: "http://roneyfraga.com/dash/2020_A4F_SciBiz/#people", align: right }
+      - { title: "Patent", href: "http://roneyfraga.com/dash/2020_A4F_SciBiz/#patent", align: right }
       - { title: "About", href: "http://roneyfraga.com/", align: right }
     social: [ "menu" ]
-    source_code: "embed"
     theme: bootstrap #yeti #lumen
     logo: img/logo.png
 runtime: shiny
@@ -178,16 +177,177 @@ import('data/groups_description.txt') %>>%
 
 <!--  ------------------------------------------------------------ -->
 
-# g01 {data-navmenu="Groups"}
-    
-### Aplicação `shiny`
+# g03 {data-navmenu="Groups"}
 
+<h4> Group g03 - Active food packaging technologies </h4>
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+### Authors Network
+
+
+```{r}
+import('data/authorNet_g03.rds') %>>% (. -> authorNet)
+
+visNetwork(authorNet$nodes, authorNet$edges, height = "750px", width='500px') %>>%
+    visIgraphLayout(layout = "layout_with_kk")  %>>%
+    visOptions(highlightNearest = TRUE)
+```
+
+### Authors Production 
+
+
+```{r}
+# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
+# authorProd$graph
+knitr::include_graphics('img/top_authors_g03.png')
+```
+
+### Authors
+
+```{r}
+import('data/indices_g03.rds') %>>% 
+    mutate(m_index=round(m_index,2)) %>>% 
+    (kable(.,'html')) %>>% 
+    kable_styling() %>>% 
+    scroll_box(width = "100%", height = "460px")
+```
+
+<h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
+<h5> G-index is an improvement of the h-index. If this set is ranked in decreasing order of the number of citations that they received, the g-index is the (unique) largest number such that the top g articles received (together) at least g2 citations.   </h5> 
+<h5> M-Index is the H-index divided by the number of years that a scientist has been active. </h5> 
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+
+### Countries Network
+
+```{r}
+
+import('data/countryNet_g03.rds') %>>% (. -> countryNet)
+
+visNetwork(countryNet$nodes, countryNet$edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
+```
+
+### Papers Hubs
+
+```{r eval=T}
+import('data/netcit_hubs_full_info.xlsx') %>>% 
+    as_tibble %>>% 
+    dplyr::filter(grupo=='g03') %>>% 
+    rename(Group = grupo) %>>% 
+    relocate(AU,.after=Group) %>>% 
+    select(-SR) %>>% 
+    slice(1:50) %>>% 
+    (. -> papersHub)
+
+papersHub  %>>% 
+    datatable(
+              rownames = FALSE,
+              extensions = 'Buttons', 
+              options = list( 
+                             dom = 'Bfrtip',
+                             columnDefs = list(list(visible=FALSE, targets=c(3:4,8:10))), 
+                             buttons = list(list(extend = 'colvis', columns = c(0:(ncol(papersHub)-1)))
+                             )
+              )
+    )
+
+```
+
+<!--  ------------------------------------------------------------ -->
+
+# g09 {data-navmenu="Groups"}
+
+<h4> Group g09 - Food irradiation </h4>
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+### Authors Network
+
+
+```{r}
+import('data/authorNet_g09.rds') %>>% (. -> authorNet)
+
+visNetwork(authorNet$nodes, authorNet$edges, height = "750px", width='500px') %>>%
+    visIgraphLayout(layout = "layout_with_kk")  %>>%
+    visOptions(highlightNearest = TRUE)
+```
+
+### Authors Production 
+
+
+```{r}
+# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
+# authorProd$graph
+knitr::include_graphics('img/top_authors_g09.png')
+```
+
+### Authors
+
+```{r}
+import('data/indices_g09.rds') %>>% 
+    mutate(m_index=round(m_index,2)) %>>% 
+    (kable(.,'html')) %>>% 
+    kable_styling() %>>% 
+    scroll_box(width = "100%", height = "460px")
+```
+
+<h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
+<h5> G-index is an improvement of the h-index. If this set is ranked in decreasing order of the number of citations that they received, the g-index is the (unique) largest number such that the top g articles received (together) at least g2 citations.   </h5> 
+<h5> M-Index is the H-index divided by the number of years that a scientist has been active. </h5> 
+
+Column {data-width=500 .tabset}
+-------------------------------------
+
+
+### Countries Network
+
+```{r}
+
+import('data/countryNet_g09.rds') %>>% (. -> countryNet)
+
+visNetwork(countryNet$nodes, countryNet$edges, height = "750px", width='500px') %>>% 
+    visIgraphLayout(layout = "layout_with_fr")  %>>% 
+    visOptions(highlightNearest = TRUE)
+```
+
+### Papers Hubs
+
+```{r eval=T}
+import('data/netcit_hubs_full_info.xlsx') %>>% 
+    as_tibble %>>% 
+    dplyr::filter(grupo=='g09') %>>% 
+    rename(Group = grupo) %>>% 
+    relocate(AU,.after=Group) %>>% 
+    select(-SR) %>>% 
+    slice(1:50) %>>% 
+    (. -> papersHub)
+
+papersHub  %>>% 
+    datatable(
+              rownames = FALSE,
+              extensions = 'Buttons', 
+              options = list( 
+                             dom = 'Bfrtip',
+                             columnDefs = list(list(visible=FALSE, targets=c(3:4,8:10))), 
+                             buttons = list(list(extend = 'colvis', columns = c(0:(ncol(papersHub)-1)))
+                             )
+              )
+    )
+
+```
 
 <!--  ------------------------------------------------------------ -->
 
 # g15 {data-navmenu="Groups"}
 
-<h3> Group g15 - Osmotic dehydration of fruits and vegetables </h3>
+<h4> Group g15 - Osmotic dehydration of fruits and vegetables </h4>
 
 Column {data-width=500 .tabset}
 -------------------------------------
@@ -203,6 +363,15 @@ visNetwork(authorNet$nodes, authorNet$edges, height = "750px", width='500px') %>
     visOptions(highlightNearest = TRUE)
 ```
 
+### Authors Production 
+
+
+```{r}
+# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
+# authorProd$graph
+knitr::include_graphics('img/top_authors_g15.png')
+```
+
 ### Authors
 
 ```{r}
@@ -216,16 +385,6 @@ import('data/indices_g15.rds') %>>%
 <h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
 <h5> G-index is an improvement of the h-index. If this set is ranked in decreasing order of the number of citations that they received, the g-index is the (unique) largest number such that the top g articles received (together) at least g2 citations.   </h5> 
 <h5> M-Index is the H-index divided by the number of years that a scientist has been active. </h5> 
-
-### Authors Production 
-
-
-```{r}
-# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
-# authorProd$graph
-knitr::include_graphics('img/top_authors_g15.png')
-```
-
 
 Column {data-width=500 .tabset}
 -------------------------------------
@@ -245,22 +404,26 @@ visNetwork(countryNet$nodes, countryNet$edges, height = "750px", width='500px') 
 ### Papers Hubs
 
 ```{r}
-
 import('data/netcit_hubs_full_info.xlsx') %>>% 
     as_tibble %>>% 
     dplyr::filter(grupo=='g15') %>>% 
     rename(Group = grupo) %>>% 
     relocate(AU,.after=Group) %>>% 
-    select(-SR,-Ki,-ki) %>>% 
+    select(-SR) %>>% 
     (. -> papersHub)
 
-papersHub %>>% 
-    datatable(rownames=F,
-              options=list(pageLength=8, dom = 'Bfrtip', 
-                            columnDefs = list(list(visible=FALSE, targets=c(6:8))),
-                            buttons = list(list(extend = 'colvis'))
+papersHub  %>>% 
+    datatable(
+              rownames = FALSE,
+              extensions = 'Buttons', 
+              options = list( 
+                             dom = 'Bfrtip',
+                             columnDefs = list(list(visible=FALSE, targets=c(3:4,8:10))), 
+                             buttons = list(list(extend = 'colvis', columns = c(0:(ncol(papersHub)-1)))
+                             )
               )
     )
+
 ```
 
 
@@ -268,7 +431,7 @@ papersHub %>>%
 
 # g16 {data-navmenu="Groups"}
 
-<h3> Group g16 - Cold plasma and oxidative stability </h3>
+<h4> Group g16 - Cold plasma and oxidative stability </h4>
 
 Column {data-width=500 .tabset}
 -------------------------------------
@@ -284,6 +447,15 @@ visNetwork(authorNet$nodes, authorNet$edges, height = "750px", width='500px') %>
     visOptions(highlightNearest = TRUE)
 ```
 
+### Authors Production 
+
+
+```{r}
+# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
+# authorProd$graph
+knitr::include_graphics('img/top_authors_g16.png')
+```
+
 ### Authors
 
 ```{r}
@@ -297,15 +469,6 @@ import('data/indices_g16.rds') %>>%
 <h5> H-index is defined as the maximum value of h such that the given author/journal has published h papers that have each been cited at least h times. </h5> 
 <h5> G-index is an improvement of the h-index. If this set is ranked in decreasing order of the number of citations that they received, the g-index is the (unique) largest number such that the top g articles received (together) at least g2 citations.   </h5> 
 <h5> M-Index is the H-index divided by the number of years that a scientist has been active. </h5> 
-
-### Authors Production 
-
-
-```{r}
-# import('data/authorProd_g05.rds') %>>% (. -> authorProd)
-# authorProd$graph
-knitr::include_graphics('img/top_authors_g16.png')
-```
 
 
 Column {data-width=500 .tabset}
@@ -332,16 +495,21 @@ import('data/netcit_hubs_full_info.xlsx') %>>%
     dplyr::filter(grupo=='g16') %>>% 
     rename(Group = grupo) %>>% 
     relocate(AU,.after=Group) %>>% 
-    select(-SR,-Ki,-ki) %>>% 
+    select(-SR) %>>% 
     (. -> papersHub)
 
-papersHub %>>% 
-    datatable(rownames=F,
-              options=list(pageLength=8, dom = 'Bfrtip', 
-                            columnDefs = list(list(visible=FALSE, targets=c(6:8))),
-                            buttons = list(list(extend = 'colvis'))
+papersHub  %>>% 
+    datatable(
+              rownames = FALSE,
+              extensions = 'Buttons', 
+              options = list( 
+                             dom = 'Bfrtip',
+                             columnDefs = list(list(visible=FALSE, targets=c(3:4,8:10))), 
+                             buttons = list(list(extend = 'colvis', columns = c(0:(ncol(papersHub)-1)))
+                             )
               )
     )
+
 ```
 
 
@@ -375,13 +543,12 @@ Column {data-width=300}
 
 # People  {.hidden}
 
-Adicionar os grandes números do Lattes. 
-
+developing...
 
 <!--  ------------------------------------------------------------ -->
 
 # Patent  {.hidden}
 
-Em construção.
+developing...
 
 
