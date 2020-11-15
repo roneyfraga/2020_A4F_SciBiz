@@ -20,3 +20,4 @@ rsync_html:
 
 rsync_files:
 	rsync -avzhe ssh --info=progress2 --delete files_$(file)/ bibr@159.89.36.185:/var/www/roneyfraga.com/public_html/dash/$(file)/
+
