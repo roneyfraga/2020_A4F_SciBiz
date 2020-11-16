@@ -1,6 +1,6 @@
 Group;Description
 g01;General purpose knowlodge.
-g02;Comparison between methods and techniques.
+g02;Non-thermal processes.
 g03;Active food packaging technologies (chitosan, nanotechnology, essential oils, edible film).
 g04;Edible coatings (postharvest, edible film, alginate, respiration).
 g05;Quality and shelf life of meats (lipid oxidation, antioxidant).
