@@ -6,9 +6,9 @@ g04;Edible coatings (postharvest, edible film, alginate, respiration).
 g05;Quality and shelf life of meats (lipid oxidation, antioxidant).
 g06;Microbial shelf life in bakery products (lactic acid bacteria, sourdough, biopreservation, rheology, exopolysaccharides).
 g07;Predictive methods (predictive microbiology, modeling).
-g08;Sensory shelf life analysis.
+g08;Lipid oxidation.
 g09;Food irradiation (mushrooms, electron beam).
-g10;Probiotics and biopreservation.
+g10;Probiotics and bacteriocins.
 g11;Listeria monocytogenes studies.
 g12;Studies fluid milk processing systems (microfiltration, pasteurization, proteolysis).
 g13;Storage stability. 
